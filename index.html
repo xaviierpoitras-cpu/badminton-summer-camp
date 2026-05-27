@@ -531,7 +531,7 @@ async function loadAdminPlayers(){
     if(!players.length){html+=`<p style="font-size:13px;color:var(--text3);font-style:italic">No players yet. Click "Seed initial players" to upload.</p>`;}
     else{ players.forEach(p=>{
       html+=`<div class="admin-row">
-        <div><div class="admin-row-info">${p.name} <span style="font-size:11px;color:var(--text3)">(${p.group})</span></div>
+        <div><div class="admin-row-info">${p.name} <span style="font-size:11px;color:var(--text3)">(${p.group})</span> <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:2px 8px;border-radius:20px">${p.pin||'—'}</span></div>
         <div class="admin-row-sub">${p.email}</div></div>
         <button class="btn-red" onclick="removePlayer('${p.id}')">Remove</button>
       </div>`;
