@@ -155,6 +155,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <p class="pin-error" id="pin-error">Code PIN incorrect. Contacte l'organisateur.</p>
     <button class="btn-login" onclick="checkPin()">Accéder →</button>
+    <div style="text-align:center;margin-top:1rem"><button onclick="showAdminLogin()" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline">Accès organisateur</button></div>
   </div>
 </div>
 
@@ -312,9 +313,9 @@ function loadSpots(){ try{ const s=localStorage.getItem('be_spots_v4'); spots=s?
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 function initials(n){ return n.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase(); }
 
-// Get spot for a specific date+group combo
-function getSpot(dateId, grp){
-  return Object.entries(spots).find(([k,v])=>v.dateId===dateId && v.group===grp);
+// Get ALL spots for a specific date+group combo
+function getSpots(dateId, grp){
+  return Object.entries(spots).filter(([k,v])=>v.dateId===dateId && v.group===grp);
 }
 
 // ── PIN LOGIN ───────────────────────────────────
@@ -401,16 +402,18 @@ function renderGrid(){
           html+=`<td><span class="cell-na">—</span></td>`;
         } else {
           const entry=getSpot(day.id,grp);
-          if(!entry){
+          const entries=getSpots(day.id,grp);
+          if(!entries.length){
             html+=`<td><span style="font-size:11px;color:var(--text3)">–</span></td>`;
           } else {
-            const [key,spot]=entry;
-            const isRes=spot.reservedBy!=null;
-            const shortName=isRes?spot.reservedBy.split(' ')[0]:'';
-            html+=`<td class="cell-avail" onclick="showSpotModal('${key}')">
-              <div class="cell-spot">
-                <div class="spot-dot ${isRes?'reserved':'avail'}"></div>
-                <div class="spot-label">${isRes?shortName:'Dispo'}</div>
+            const avail=entries.filter(([k,s])=>!s.reservedBy).length;
+            const reserved=entries.filter(([k,s])=>s.reservedBy).length;
+            html+=`<td style="cursor:pointer" onclick="showDateGroupModal('${day.id}','${grp}','${cap(day.label)}')">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px">
+                <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">
+                  ${entries.map(([k,s])=>`<div class="spot-dot ${s.reservedBy?'reserved':'avail'}" title="${s.reservedBy?'Réservé par '+s.reservedBy:'Disponible'}"></div>`).join('')}
+                </div>
+                <div style="font-size:10px;color:var(--text3)">${avail>0?avail+' dispo':''} ${reserved>0?reserved+' rés.':''}</div>
               </div></td>`;
           }
         }
@@ -435,8 +438,7 @@ function renderAdminForm(){
   let dateOpts='';
   Object.entries(groupDates).forEach(([grp,dates])=>{
     dates.forEach(d=>{
-      const exists=getSpot(d.id,grp);
-      if(!exists) dateOpts+=`<option value="${grp}||${d.id}">[${GROUPS[grp].label}] ${cap(d.label)}</option>`;
+      dateOpts+=`<option value="${grp}||${d.id}">[${GROUPS[grp].label}] ${cap(d.label)}</option>`;
     });
   });
   return `<div class="add-spot-form">
@@ -495,7 +497,7 @@ function showSpotModal(key){
   document.getElementById('res-sub').textContent=cap(s.dateLabel);
 
   if(s.reservedBy){
-    const mine=s.reservedBy===currentUser.name;
+    const mine=currentUser&&!currentUser.isAdmin&&s.reservedBy===currentUser.name;
     document.getElementById('res-body').innerHTML=`
       <div class="reserved-box">⏳ Cette place est réservée par <strong>${s.reservedBy}</strong>.</div>`;
     document.getElementById('res-actions').innerHTML=`
@@ -529,13 +531,64 @@ function cancelReserve(key){
 }
 
 // ── ADMIN ───────────────────────────────────────
+function showAdminLogin(){
+  document.getElementById('admin-pw').value='';
+  document.getElementById('pw-error').style.display='none';
+  document.getElementById('modal-admin').style.display='block';
+}
 function handleAdmin(){
   if(isAdmin){ renderAll(); }
-  else{ document.getElementById('admin-pw').value=''; document.getElementById('pw-error').style.display='none'; document.getElementById('modal-admin').style.display='block'; }
+  else{ showAdminLogin(); }
 }
 function checkAdmin(){
-  if(document.getElementById('admin-pw').value===ADMIN_PW){ isAdmin=true; closeModal('modal-admin'); renderAll(); }
-  else{ document.getElementById('pw-error').style.display='block'; }
+  if(document.getElementById('admin-pw').value===ADMIN_PW){
+    isAdmin=true;
+    closeModal('modal-admin');
+    // If admin logged in from login screen (no currentUser), enter admin-only mode
+    if(!currentUser){
+      currentUser={name:'Admin',email:'',group:'advanced',isAdmin:true};
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+    }
+    renderAll();
+  } else { document.getElementById('pw-error').style.display='block'; }
+}
+
+function showDateGroupModal(dateId, grp, dateLabel){
+  const entries=getSpots(dateId,grp);
+  const g=GROUPS[grp];
+  document.getElementById('res-title').textContent=g.label;
+  document.getElementById('res-sub').textContent=dateLabel;
+  let body='', actions='';
+  if(!entries.length){ closeModal('modal-reserve'); return; }
+  entries.forEach(([key,s])=>{
+    const isRes=!!s.reservedBy;
+    const mine=isRes&&currentUser&&s.reservedBy===currentUser.name;
+    const adminCanDel=isAdmin;
+    body+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px">
+      <div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="spot-dot ${isRes?'reserved':'avail'}" style="width:10px;height:10px"></div>
+          <span style="font-size:13px;font-weight:500">${isRes?'Réservé par '+s.reservedBy:'Disponible'}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">$${g.price}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${!isRes&&!currentUser.isAdmin?`<button class="btn-primary" style="padding:5px 10px;font-size:12px" onclick="reserveSpot('${key}')">Réserver</button>`:''}
+        ${mine?`<button class="btn-cancel" style="padding:5px 10px;font-size:12px" onclick="cancelReserve('${key}')">Annuler</button>`:''}
+        ${adminCanDel?`<button class="btn-del" onclick="adminRemove('${key}')">🗑</button>`:''}
+      </div>
+    </div>`;
+  });
+  if(!currentUser.isAdmin){
+    body+=`<div class="info-box" style="margin-top:10px">
+      <p>📧 <strong>E-transfer :</strong> ${ETRANSFER_EMAIL}</p>
+      <p style="font-size:12px;margin-top:6px;color:var(--accent-text)">Envoie le montant après réservation.</p>
+    </div>`;
+  }
+  document.getElementById('res-body').innerHTML=body;
+  document.getElementById('res-actions').innerHTML=`<button class="btn-cancel" onclick="closeModal('modal-reserve')" style="flex:1">Fermer</button>`;
+  document.getElementById('modal-reserve').style.display='block';
 }
 function adminAddSpot(){
   const val=document.getElementById('add-select').value;
@@ -550,7 +603,7 @@ function adminAddSpot(){
 }
 function adminRemove(key){
   if(!confirm('Retirer cette place?')) return;
-  delete spots[key]; saveSpots(); renderAll();
+  delete spots[key]; saveSpots(); closeModal('modal-reserve'); renderAll();
 }
 
 function closeModal(id){ document.getElementById(id).style.display='none'; }
