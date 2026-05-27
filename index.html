@@ -401,7 +401,7 @@ function renderGrid(){
         if(!practicesThisDay){
           html+=`<td><span class="cell-na">—</span></td>`;
         } else {
-          const entry=getSpot(day.id,grp);
+          const entry=getSpots(day.id,grp);
           const entries=getSpots(day.id,grp);
           if(!entries.length){
             html+=`<td><span style="font-size:11px;color:var(--text3)">–</span></td>`;
