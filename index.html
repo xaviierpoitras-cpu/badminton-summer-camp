@@ -1,10 +1,16 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Badminton Excellence — Été 2026</title>
+<title>Badminton Excellence — Summer 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
 <style>
 :root{
   --bg:#f7f6f2;--surface:#fff;--surface2:#f0ede6;--border:#e2ddd6;
@@ -12,7 +18,6 @@
   --accent:#2d5a3d;--accent-bg:#eaf2ed;--accent-text:#1e3f2a;
   --warn:#92400e;--warn-bg:#fef3c7;
   --danger:#991b1b;--danger-bg:#fee2e2;
-  --info:#1e40af;--info-bg:#eff6ff;
   --adv1:#2d5a3d;--adv1-bg:#eaf2ed;
   --adv2:#1e40af;--adv2-bg:#eff6ff;
   --int1:#6d28d9;--int1-bg:#f5f3ff;
@@ -27,13 +32,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:380px;max-width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 .login-logo{font-size:36px;display:block;margin-bottom:10px}
 .login-card h2{font-size:20px;font-weight:600;margin-bottom:4px}
-.login-card p{font-size:14px;color:var(--text2);margin-bottom:1.5rem;line-height:1.5}
+.login-card .sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem;line-height:1.5}
 .pin-wrap{display:flex;gap:10px;margin-bottom:1rem}
 .pin-digit{width:60px;height:68px;font-size:28px;font-family:'DM Mono',monospace;font-weight:500;text-align:center;border:2px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
 .pin-digit:focus{border-color:var(--accent)}
 .pin-error{font-size:13px;color:var(--danger);margin-bottom:8px;display:none}
 .btn-login{width:100%;padding:12px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
 .btn-login:hover{opacity:.88}
+.admin-link{display:block;text-align:center;margin-top:1rem;font-size:12px;color:var(--text3);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;text-decoration:underline}
+.admin-fields{display:none;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem}
+.admin-fields input{width:100%;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:8px}
+.admin-fields input:focus{border-color:var(--accent)}
+.loading-msg{font-size:13px;color:var(--text3);text-align:center;padding:1rem 0;display:none}
 
 /* HEADER */
 .app-header{background:var(--accent);color:#fff;padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:12px;flex-wrap:wrap}
@@ -47,7 +57,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hbtn.active{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)}
 
 /* LAYOUT */
-.layout{display:flex;gap:0;min-height:calc(100vh - 56px)}
+.layout{display:flex;min-height:calc(100vh - 56px)}
 .main-area{flex:1;padding:1.25rem;overflow-x:auto;min-width:0}
 .side-panel{width:260px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);padding:1rem;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px}
 
@@ -57,7 +67,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .dot-avail{background:#22c55e}
 .dot-reserved{background:#f59e0b}
-.dot-none{background:var(--border)}
 
 /* GROUP BADGES */
 .gbadge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace}
@@ -70,56 +79,52 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .week-block{margin-bottom:1rem}
 .week-title{font-size:12px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace;margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)}
 .grid-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
-.grid-table th{padding:9px 12px;text-align:center;font-size:12px;font-weight:600;color:var(--text2);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+.grid-table th{padding:9px 12px;text-align:center;font-size:12px;font-weight:600;background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
 .grid-table th:first-child{text-align:left;min-width:100px}
 .grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle}
 .grid-table td:first-child{text-align:left;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap}
 .grid-table tr:last-child td{border-bottom:none}
 .grid-table tr:hover td{background:var(--surface2)}
-.cell-na{color:var(--border);font-size:18px;line-height:1}
-.cell-avail{cursor:pointer}
-.cell-spot{display:inline-flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;border-radius:var(--radius);transition:background .15s}
-.cell-spot:hover{background:var(--surface2)}
-.spot-dot{width:14px;height:14px;border-radius:50%}
+.spot-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
 .spot-dot.avail{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
 .spot-dot.reserved{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.2)}
-.spot-label{font-size:10px;color:var(--text3);white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
+.cell-btn{cursor:pointer;padding:4px 8px;border-radius:var(--radius);display:inline-flex;flex-direction:column;align-items:center;gap:3px;transition:background .15s}
+.cell-btn:hover{background:var(--surface2)}
+.cell-count{font-size:10px;color:var(--text3)}
 
-/* SIDE LIST */
+/* SIDE */
 .side-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
-.side-count{font-size:11px;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace}
+.side-badge{font-size:11px;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace}
 .side-item{padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .15s}
 .side-item:hover{border-color:var(--accent);background:var(--accent-bg)}
-.side-item-date{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:capitalize}
-.side-item-price{font-size:12px;font-weight:600;color:var(--accent);font-family:'DM Mono',monospace}
+.side-date{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:capitalize;margin-top:3px}
+.side-price{font-size:12px;font-weight:600;color:var(--accent);font-family:'DM Mono',monospace;margin-top:2px}
 .side-empty{font-size:13px;color:var(--text3);font-style:italic;text-align:center;padding:1rem 0}
 
 /* ADMIN */
 .admin-banner{background:var(--danger-bg);color:var(--danger);border:1px solid #fca5a5;border-radius:var(--radius);padding:8px 14px;font-size:13px;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
-.add-spot-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:1rem}
-.add-spot-form h3{font-size:14px;font-weight:600;margin-bottom:12px}
-.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.form-group{flex:1;min-width:140px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:1rem}
+.panel h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.form-group{flex:1;min-width:130px}
 .form-group label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
-.form-group select{width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
-.btn-add-spot{padding:9px 18px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
-.btn-add-spot:hover{opacity:.88}
-.admin-spot-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
-.admin-spot-list h3{font-size:14px;font-weight:600;margin-bottom:12px}
-.admin-spot-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px}
-.admin-spot-info{font-size:13px;color:var(--text)}
-.admin-spot-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.btn-del{padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s;flex-shrink:0}
-.btn-del:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.form-group select,.form-group input{width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
+.form-group select:focus,.form-group input:focus{border-color:var(--accent)}
+.btn-green{padding:9px 16px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
+.btn-green:hover{opacity:.88}
+.btn-red{padding:5px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s;flex-shrink:0}
+.btn-red:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+.admin-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px}
+.admin-row-info{font-size:13px;color:var(--text)}
+.admin-row-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.seed-btn{padding:8px 14px;border-radius:var(--radius);border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.seed-btn:hover{opacity:.85}
 
 /* MODALS */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
 .modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;width:360px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.15)}
 .modal h3{font-size:17px;font-weight:600;margin-bottom:4px}
 .modal-sub{font-size:13px;color:var(--text2);margin-bottom:1rem}
-.modal label{font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px}
-.modal input{width:100%;font-size:14px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
-.modal input:focus{border-color:var(--accent)}
 .modal-actions{display:flex;gap:8px;margin-top:1.25rem}
 .btn-primary{flex:1;padding:10px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
 .btn-primary:hover{opacity:.88}
@@ -128,8 +133,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .info-box{background:var(--accent-bg);border:1px solid #b6d9c4;border-radius:var(--radius);padding:14px 16px;margin-top:1rem}
 .info-box p{font-size:14px;color:var(--accent-text);margin-bottom:5px}
 .info-price{font-size:18px;font-weight:700;color:var(--accent-text);margin-top:8px;font-family:'DM Mono',monospace}
-.reserved-box{background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--radius);padding:12px 14px;margin-top:1rem;font-size:13px;color:var(--warn)}
-.pw-error{font-size:12px;color:var(--danger);margin-top:6px;display:none}
+.warn-box{background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--warn)}
 
 @media(max-width:700px){
   .side-panel{display:none}
@@ -141,21 +145,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN SCREEN -->
 <div id="login-screen" class="login-screen">
   <div class="login-card">
     <span class="login-logo">🏸</span>
     <h2>Badminton Excellence</h2>
-    <p>Été 2026 · Places disponibles<br>Entre ton code PIN personnel pour accéder.</p>
+    <p class="sub">Summer 2026 · Available spots<br>Enter your personal PIN to access.</p>
     <div class="pin-wrap">
       <input class="pin-digit" maxlength="1" type="tel" id="p0" oninput="pinInput(0)" onkeydown="pinKey(event,0)" autocomplete="off"/>
       <input class="pin-digit" maxlength="1" type="tel" id="p1" oninput="pinInput(1)" onkeydown="pinKey(event,1)" autocomplete="off"/>
       <input class="pin-digit" maxlength="1" type="tel" id="p2" oninput="pinInput(2)" onkeydown="pinKey(event,2)" autocomplete="off"/>
       <input class="pin-digit" maxlength="1" type="tel" id="p3" oninput="pinInput(3)" onkeydown="pinKey(event,3)" autocomplete="off"/>
     </div>
-    <p class="pin-error" id="pin-error">Code PIN incorrect. Contacte l'organisateur.</p>
-    <button class="btn-login" onclick="checkPin()">Accéder →</button>
-    <div style="text-align:center;margin-top:1rem"><button onclick="showAdminLogin()" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline">Accès organisateur</button></div>
+    <p class="pin-error" id="pin-error">Incorrect PIN. Contact the organizer.</p>
+    <p class="loading-msg" id="loading-msg">Verifying...</p>
+    <button class="btn-login" onclick="checkPin()">Access →</button>
+    <button class="admin-link" onclick="toggleAdminFields()">Organizer access</button>
+    <div class="admin-fields" id="admin-fields">
+      <input type="email" id="admin-email" placeholder="Email address" autocomplete="email"/>
+      <input type="password" id="admin-password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')adminLogin()"/>
+      <p class="pin-error" id="admin-error">Incorrect email or password.</p>
+      <button class="btn-login" onclick="adminLogin()">Sign in as organizer</button>
+    </div>
   </div>
 </div>
 
@@ -164,7 +175,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <header class="app-header">
     <div>
       <h1>🏸 Badminton Excellence</h1>
-      <p>6 juillet – 14 août 2026</p>
+      <p>July 6 – August 14, 2026</p>
     </div>
     <div class="header-right" id="nav-btns"></div>
   </header>
@@ -174,30 +185,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
-<!-- Modal: réserver -->
-<div id="modal-reserve" style="display:none">
-  <div class="modal-overlay" onclick="closeModal('modal-reserve')">
+<!-- Modal: spot detail -->
+<div id="modal-spot" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-spot')">
     <div class="modal" onclick="event.stopPropagation()">
-      <h3 id="res-title">Place disponible</h3>
-      <p class="modal-sub" id="res-sub"></p>
-      <div id="res-body"></div>
-      <div class="modal-actions" id="res-actions"></div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: admin login -->
-<div id="modal-admin" style="display:none">
-  <div class="modal-overlay" onclick="closeModal('modal-admin')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <h3>Accès administrateur</h3>
-      <label>Mot de passe</label>
-      <input id="admin-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkAdmin()"/>
-      <p class="pw-error" id="pw-error">Mot de passe incorrect.</p>
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeModal('modal-admin')">Annuler</button>
-        <button class="btn-primary" onclick="checkAdmin()">Entrer</button>
-      </div>
+      <h3 id="spot-title"></h3>
+      <p class="modal-sub" id="spot-sub"></p>
+      <div id="spot-body"></div>
+      <div class="modal-actions" id="spot-actions"></div>
     </div>
   </div>
 </div>
@@ -206,19 +201,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 // ═══════════════════════════════════════════════
 //  ⚙️  CONFIGURATION
 // ═══════════════════════════════════════════════
-const ADMIN_PW       = 'badminton2026'; // ← mot de passe admin
 const ETRANSFER_EMAIL = 'samtessier01@hotmail.com';
-const PRICE_ADV = (250/9).toFixed(2); // Avancé 1 & 2
-const PRICE_INT = (78/3).toFixed(2);  // Intermédiaire 1 & 2
+const PRICE_ADV = (250/9).toFixed(2);
+const PRICE_INT = (78/3).toFixed(2);
 
-const GROUPS = {
-  adv1: { label:'Avancé 1',      badge:'gbadge-adv1', weeks:'Sem. 1–3', price: PRICE_ADV },
-  adv2: { label:'Avancé 2',      badge:'gbadge-adv2', weeks:'Sem. 4–6', price: PRICE_ADV },
-  int1: { label:'Intermédiaire 1', badge:'gbadge-int1', weeks:'Sem. 1–3', price: PRICE_INT },
-  int2: { label:'Intermédiaire 2', badge:'gbadge-int2', weeks:'Sem. 4–6', price: PRICE_INT },
+const firebaseConfig = {
+  apiKey: "AIzaSyBcz5pFIy8PDM3i_KeL9HV-Y-kZoxNV2C0",
+  authDomain: "badminton-excellence.firebaseapp.com",
+  projectId: "badminton-excellence",
+  storageBucket: "badminton-excellence.firebasestorage.app",
+  messagingSenderId: "971453241514",
+  appId: "1:971453241514:web:8eea66df874cb04b34d8d3"
 };
 
-const PLAYERS_DB = {
+// Initial player data — used only for first-time seeding to Firebase
+const SEED_PLAYERS = {
   advanced: [
     {name:"Zhengyang Xiao",email:"kathy.xu0218@gmail.com",pin:"4242"},
     {name:"Thomas Gosselin",email:"waldor12@gmail.com",pin:"6091"},
@@ -274,341 +271,399 @@ const PLAYERS_DB = {
     {name:"Maxime Brennan",email:"Genevieve.labreche@gmail.com",pin:"2822"},
   ]
 };
+// ═══════════════════════════════════════════════
 
-// ── DATES ──────────────────────────────────────
-const FR_DAYS=['dim','lun','mar','mer','jeu','ven','sam'];
-const FR_MONTHS=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
-function fmtDate(d){ return `${FR_DAYS[d.getDay()]} ${d.getDate()} ${FR_MONTHS[d.getMonth()]}`; }
-function dateId(d){ return d.toISOString().split('T')[0]; }
+const GROUPS = {
+  adv1:{label:'Advanced 1',badge:'gbadge-adv1',weeks:'Wk 1–3',price:PRICE_ADV},
+  adv2:{label:'Advanced 2',badge:'gbadge-adv2',weeks:'Wk 4–6',price:PRICE_ADV},
+  int1:{label:'Intermediate 1',badge:'gbadge-int1',weeks:'Wk 1–3',price:PRICE_INT},
+  int2:{label:'Intermediate 2',badge:'gbadge-int2',weeks:'Wk 4–6',price:PRICE_INT},
+};
+
+const FR_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(d){return `${FR_DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;}
+function dateId(d){return d.toISOString().split('T')[0];}
 
 function genSchedule(){
-  const start=new Date(2026,6,6); // July 6
+  const start=new Date(2026,6,6);
   const weeks=[];
   for(let w=0;w<6;w++){
     const days=[];
-    // Mon=+0, Tue=+1, Wed=+2, Thu=+3
     [[0,'Mon'],[1,'Tue'],[2,'Wed'],[3,'Thu']].forEach(([off,key])=>{
-      const d=new Date(start); d.setDate(d.getDate()+w*7+off);
-      const isAdv=(key==='Mon'||key==='Wed'||key==='Thu');
-      const isInt=(key==='Tue');
-      const isFirst3=(w<3);
-      days.push({
-        date:d, label:fmtDate(d), id:dateId(d), key,
-        groups: isAdv
-          ? (isFirst3?['adv1']:['adv2'])
-          : (isFirst3?['int1']:['int2'])
+      const d=new Date(start);d.setDate(d.getDate()+w*7+off);
+      const isFirst3=w<3;
+      days.push({date:d,label:fmtDate(d),id:dateId(d),key,
+        groups:key==='Tue'?(isFirst3?['int1']:['int2']):(isFirst3?['adv1']:['adv2'])
       });
     });
-    weeks.push({week:w+1, days});
+    weeks.push({week:w+1,days});
   }
   return weeks;
 }
 const SCHEDULE=genSchedule();
 
-// ── STATE ──────────────────────────────────────
-let spots={}, currentUser=null, isAdmin=false, pendingSpot=null, page='grid';
+// Firebase
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+const auth=firebase.auth();
 
-function saveSpots(){ localStorage.setItem('be_spots_v4',JSON.stringify(spots)); }
-function loadSpots(){ try{ const s=localStorage.getItem('be_spots_v4'); spots=s?JSON.parse(s):{}; }catch(e){ spots={}; } }
-function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
-function initials(n){ return n.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase(); }
+let currentUser=null,isAdmin=false,spots={};
 
-// Get ALL spots for a specific date+group combo
-function getSpots(dateId, grp){
-  return Object.entries(spots).filter(([k,v])=>v.dateId===dateId && v.group===grp);
+// SHA-256 hash for PINs
+async function sha256(msg){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── PIN LOGIN ───────────────────────────────────
+// Real-time spots listener
+function startSpotsListener(){
+  db.collection('spots').onSnapshot(snap=>{
+    spots={};
+    snap.forEach(doc=>{spots[doc.id]=doc.data();});
+    if(currentUser) renderAll();
+  });
+}
+
+// ── LOGIN ──────────────────────────────────────
 function pinInput(i){
   const v=document.getElementById(`p${i}`).value;
-  if(v&&i<3) document.getElementById(`p${i+1}`).focus();
+  if(v&&i<3)document.getElementById(`p${i+1}`).focus();
   document.getElementById('pin-error').style.display='none';
 }
 function pinKey(e,i){
-  if(e.key==='Backspace'&&!document.getElementById(`p${i}`).value&&i>0) document.getElementById(`p${i-1}`).focus();
-  if(e.key==='Enter') checkPin();
+  if(e.key==='Backspace'&&!document.getElementById(`p${i}`).value&&i>0)document.getElementById(`p${i-1}`).focus();
+  if(e.key==='Enter')checkPin();
 }
-function getPin(){ return [0,1,2,3].map(i=>document.getElementById(`p${i}`).value).join(''); }
+function getPin(){return [0,1,2,3].map(i=>document.getElementById(`p${i}`).value).join('');}
 
-function checkPin(){
+async function checkPin(){
   const pin=getPin();
-  if(pin.length<4){ document.getElementById('pin-error').style.display='block'; return; }
-  let found=null;
-  for(const grp of ['advanced','intermediate']){
-    const p=PLAYERS_DB[grp].find(p=>p.pin===pin);
-    if(p){ found={...p,group:grp}; break; }
-  }
-  if(!found){
+  if(pin.length<4){document.getElementById('pin-error').style.display='block';return;}
+  document.getElementById('loading-msg').style.display='block';
+  document.getElementById('pin-error').style.display='none';
+  try{
+    await auth.signInAnonymously();
+    const hash=await sha256(pin);
+    const snap=await db.collection('players').where('pinHash','==',hash).limit(1).get();
+    if(snap.empty){
+      document.getElementById('pin-error').style.display='block';
+      document.getElementById('loading-msg').style.display='none';
+      [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value='');
+      document.getElementById('p0').focus();
+    } else {
+      currentUser={...snap.docs[0].data(),docId:snap.docs[0].id};
+      enterApp();
+    }
+  } catch(e){
+    document.getElementById('pin-error').textContent='Connection error. Try again.';
     document.getElementById('pin-error').style.display='block';
-    [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value='');
-    document.getElementById('p0').focus();
-    return;
+    document.getElementById('loading-msg').style.display='none';
   }
-  currentUser=found;
+}
+
+function toggleAdminFields(){
+  const f=document.getElementById('admin-fields');
+  f.style.display=f.style.display==='block'?'none':'block';
+}
+
+async function adminLogin(){
+  const email=document.getElementById('admin-email').value.trim();
+  const pw=document.getElementById('admin-password').value;
+  document.getElementById('admin-error').style.display='none';
+  try{
+    await auth.signInWithEmailAndPassword(email,pw);
+    isAdmin=true;
+    currentUser={name:'Admin',email,group:'advanced',isAdmin:true};
+    enterApp();
+  } catch(e){
+    document.getElementById('admin-error').style.display='block';
+  }
+}
+
+function enterApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
+  document.getElementById('loading-msg').style.display='none';
+  startSpotsListener();
   renderAll();
 }
-function logout(){ currentUser=null; isAdmin=false; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value=''); }
+
+function logout(){
+  auth.signOut();
+  currentUser=null;isAdmin=false;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('admin-fields').style.display='none';
+  [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value='');
+  document.getElementById('pin-error').style.display='none';
+  document.getElementById('pin-error').textContent='Incorrect PIN. Contact the organizer.';
+}
 
 // ── RENDER ──────────────────────────────────────
-function renderAll(){ renderNav(); renderGrid(); renderSide(); }
+function renderAll(){renderNav();renderGrid();renderSide();}
+function initials(n){return n.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();}
 
 function renderNav(){
   let html='';
-  if(currentUser) html+=`<div class="user-pill"><div class="user-av">${initials(currentUser.name)}</div>${currentUser.name}</div>`;
-  html+=`<button class="hbtn${isAdmin?' active':''}" onclick="handleAdmin()">${isAdmin?'⚙️ Admin':'🔒 Admin'}</button>`;
-  html+=`<button class="hbtn" onclick="logout()">Changer →</button>`;
+  if(currentUser&&!currentUser.isAdmin)
+    html+=`<div class="user-pill"><div class="user-av">${initials(currentUser.name)}</div>${currentUser.name}</div>`;
+  if(isAdmin)
+    html+=`<span style="background:rgba(255,255,255,.2);color:#fff;font-size:12px;padding:5px 10px;border-radius:20px;font-weight:500">⚙️ Admin</span>`;
+  html+=`<button class="hbtn" onclick="logout()">Sign out</button>`;
   document.getElementById('nav-btns').innerHTML=html;
+}
+
+function getSpotsFor(dateId,grp){
+  return Object.entries(spots).filter(([k,v])=>v.dateId===dateId&&v.group===grp);
 }
 
 function renderGrid(){
   let html='';
-  if(isAdmin) html+=`<div class="admin-banner">🔐 Mode administrateur — tu peux ajouter et retirer des places</div>`+renderAdminForm();
+  if(isAdmin) html+=`<div class="admin-banner">🔐 Administrator mode</div>`+renderAdminPanel();
 
   html+=`<div class="legend">
-    <span style="font-size:12px;font-weight:500;color:var(--text2)">Légende :</span>
-    <div class="legend-item"><div class="dot dot-avail"></div>Disponible</div>
-    <div class="legend-item"><div class="dot dot-reserved"></div>Réservé</div>
-    <div class="legend-item"><div class="dot dot-none"></div>Pas de pratique</div>
+    <span style="font-size:12px;font-weight:500;color:var(--text2)">Legend:</span>
+    <div class="legend-item"><div class="dot dot-avail"></div>Available</div>
+    <div class="legend-item"><div class="dot dot-reserved"></div>Reserved</div>
   </div>`;
 
-  // Group header colors
-  const thStyle={
-    adv1:`style="color:var(--adv1)"`,
-    adv2:`style="color:var(--adv2)"`,
-    int1:`style="color:var(--int1)"`,
-    int2:`style="color:var(--int2)"`,
-  };
+  const thColors={adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
 
   SCHEDULE.forEach(({week,days})=>{
-    const wStart=days[0].label, wEnd=days[days.length-1].label;
     html+=`<div class="week-block">
-      <div class="week-title">Semaine ${week} &nbsp;·&nbsp; ${cap(wStart)} – ${cap(wEnd)}</div>
+      <div class="week-title">Week ${week} &nbsp;·&nbsp; ${days[0].label} – ${days[3].label}</div>
       <table class="grid-table">
-        <thead><tr>
-          <th>Date</th>
-          <th ${thStyle.adv1}>Avancé 1<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 1–3 · Lun/Mer/Jeu</span></th>
-          <th ${thStyle.adv2}>Avancé 2<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 4–6 · Lun/Mer/Jeu</span></th>
-          <th ${thStyle.int1}>Intermédiaire 1<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 1–3 · Mar</span></th>
-          <th ${thStyle.int2}>Intermédiaire 2<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 4–6 · Mar</span></th>
+        <thead><tr><th>Date</th>
+          ${Object.entries(GROUPS).map(([g,info])=>`<th style="color:${thColors[g]}">${info.label}<br><span style="font-size:10px;font-weight:400;opacity:.7">${info.weeks}</span></th>`).join('')}
         </tr></thead>
         <tbody>`;
     days.forEach(day=>{
-      html+=`<tr><td>${cap(day.label)}</td>`;
-      ['adv1','adv2','int1','int2'].forEach(grp=>{
-        const practicesThisDay=day.groups.includes(grp);
-        if(!practicesThisDay){
-          html+=`<td><span class="cell-na">—</span></td>`;
-        } else {
-          const entry=getSpots(day.id,grp);
-          const entries=getSpots(day.id,grp);
-          if(!entries.length){
-            html+=`<td><span style="font-size:11px;color:var(--text3)">–</span></td>`;
-          } else {
-            const avail=entries.filter(([k,s])=>!s.reservedBy).length;
-            const reserved=entries.filter(([k,s])=>s.reservedBy).length;
-            html+=`<td style="cursor:pointer" onclick="showDateGroupModal('${day.id}','${grp}','${cap(day.label)}')">
-              <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px">
-                <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">
-                  ${entries.map(([k,s])=>`<div class="spot-dot ${s.reservedBy?'reserved':'avail'}" title="${s.reservedBy?'Réservé par '+s.reservedBy:'Disponible'}"></div>`).join('')}
-                </div>
-                <div style="font-size:10px;color:var(--text3)">${avail>0?avail+' dispo':''} ${reserved>0?reserved+' rés.':''}</div>
-              </div></td>`;
-          }
-        }
+      html+=`<tr><td>${day.label}</td>`;
+      Object.keys(GROUPS).forEach(grp=>{
+        if(!day.groups.includes(grp)){html+=`<td style="color:var(--border);font-size:16px">—</td>`;return;}
+        const entries=getSpotsFor(day.id,grp);
+        if(!entries.length){html+=`<td><span style="font-size:11px;color:var(--text3)">–</span></td>`;return;}
+        const avail=entries.filter(([k,s])=>!s.reservedBy).length;
+        const res=entries.filter(([k,s])=>s.reservedBy).length;
+        html+=`<td><div class="cell-btn" onclick="showCellModal('${day.id}','${grp}','${day.label}')">
+          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">
+            ${entries.map(([k,s])=>`<div class="spot-dot ${s.reservedBy?'reserved':'avail'}"></div>`).join('')}
+          </div>
+          <div class="cell-count">${avail?avail+' avail':''}${avail&&res?' · ':''}${res?res+' res.':''}</div>
+        </div></td>`;
       });
       html+=`</tr>`;
     });
     html+=`</tbody></table></div>`;
   });
-
-  if(isAdmin) html+=renderAdminSpotList();
   document.getElementById('main-area').innerHTML=html;
 }
 
-function renderAdminForm(){
-  // Build date options per group
-  const groupDates={adv1:[],adv2:[],int1:[],int2:[]};
-  SCHEDULE.forEach(({days})=>{
-    days.forEach(day=>{
-      day.groups.forEach(g=>{ groupDates[g].push({id:day.id,label:day.label}); });
+function renderAdminPanel(){
+  // Build date+group options
+  let opts='';
+  SCHEDULE.forEach(({days})=>days.forEach(day=>{
+    day.groups.forEach(grp=>{
+      opts+=`<option value="${grp}||${day.id}||${day.label}">[${GROUPS[grp].label}] ${day.label}</option>`;
     });
-  });
-  let dateOpts='';
-  Object.entries(groupDates).forEach(([grp,dates])=>{
-    dates.forEach(d=>{
-      dateOpts+=`<option value="${grp}||${d.id}">[${GROUPS[grp].label}] ${cap(d.label)}</option>`;
-    });
-  });
-  return `<div class="add-spot-form">
-    <h3>➕ Ajouter une place disponible</h3>
+  }));
+
+  // Existing spots list
+  const allSpots=Object.entries(spots);
+  let spotRows=allSpots.length?allSpots.map(([key,s])=>{
+    const g=GROUPS[s.group];
+    return `<div class="admin-row">
+      <div><div class="admin-row-info"><span class="gbadge ${g.badge}">${g.label}</span> ${s.dateLabel}</div>
+      <div class="admin-row-sub">${s.reservedBy?'Reserved by '+s.reservedBy:'Available'} · $${g.price}</div></div>
+      <button class="btn-red" onclick="removeSpot('${key}')">Remove</button>
+    </div>`;
+  }).join(''):'<p style="font-size:13px;color:var(--text3);font-style:italic">No spots posted.</p>';
+
+  // Players list
+  let playerPanel=renderAdminPlayers();
+
+  return `
+  <div class="panel">
+    <h3>➕ Add available spot</h3>
     <div class="form-row">
-      <div class="form-group" style="flex:2">
-        <label>Groupe & date</label>
-        <select id="add-select">${dateOpts||'<option>Toutes les places sont déjà affichées</option>'}</select>
-      </div>
+      <div class="form-group"><label>Group & date</label><select id="spot-select">${opts}</select></div>
     </div>
-    <button class="btn-add-spot" onclick="adminAddSpot()">Ajouter</button>
+    <button class="btn-green" onclick="addSpot()">Add spot</button>
+  </div>
+  <div class="panel"><h3>All posted spots (${allSpots.length})</h3>${spotRows}</div>
+  ${playerPanel}`;
+}
+
+function renderAdminPlayers(){
+  // We'll load players async — render a placeholder that gets filled
+  setTimeout(loadAdminPlayers, 100);
+  return `<div class="panel" id="player-panel">
+    <h3>👥 Players</h3>
+    <p style="font-size:13px;color:var(--text3)">Loading...</p>
   </div>`;
 }
 
-function renderAdminSpotList(){
-  const all=Object.entries(spots);
-  if(!all.length) return `<div class="admin-spot-list"><h3>Places affichées (0)</h3><p style="font-size:13px;color:var(--text3);font-style:italic">Aucune place affichée.</p></div>`;
-  let html=`<div class="admin-spot-list"><h3>Places affichées (${all.length})</h3>`;
-  all.forEach(([key,s])=>{
-    const g=GROUPS[s.group];
-    const resLabel=s.reservedBy?`Réservé par ${s.reservedBy}`:'Disponible';
-    html+=`<div class="admin-spot-item">
-      <div>
-        <div class="admin-spot-info"><span class="gbadge ${g.badge}">${g.label}</span> &nbsp;${cap(s.dateLabel)}</div>
-        <div class="admin-spot-sub">${resLabel} · $${g.price}</div>
+async function loadAdminPlayers(){
+  const panel=document.getElementById('player-panel');
+  if(!panel) return;
+  try{
+    const snap=await db.collection('players').orderBy('name').get();
+    const players=snap.docs.map(d=>({id:d.id,...d.data()}));
+    let html=`<div class="panel" id="player-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3>👥 Players (${players.length})</h3>
+        <button class="seed-btn" onclick="seedPlayers()" title="Upload initial player list to Firebase">Seed initial players</button>
       </div>
-      <button class="btn-del" onclick="adminRemove('${key}')">Retirer</button>
-    </div>`;
-  });
-  return html+`</div>`;
+      <div class="form-row">
+        <div class="form-group"><label>Name</label><input id="new-name" placeholder="Full name"/></div>
+        <div class="form-group"><label>Email</label><input id="new-email" type="email" placeholder="parent@email.com"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>PIN (4 digits)</label><input id="new-pin" placeholder="1234" maxlength="4" type="tel"/></div>
+        <div class="form-group"><label>Group</label><select id="new-group">
+          <option value="advanced">Advanced</option>
+          <option value="intermediate">Intermediate</option>
+        </select></div>
+      </div>
+      <button class="btn-green" onclick="addPlayer()">Add player</button>
+      <div style="margin-top:14px">`;
+    if(!players.length){html+=`<p style="font-size:13px;color:var(--text3);font-style:italic">No players yet. Click "Seed initial players" to upload.</p>`;}
+    else{ players.forEach(p=>{
+      html+=`<div class="admin-row">
+        <div><div class="admin-row-info">${p.name} <span style="font-size:11px;color:var(--text3)">(${p.group})</span></div>
+        <div class="admin-row-sub">${p.email}</div></div>
+        <button class="btn-red" onclick="removePlayer('${p.id}')">Remove</button>
+      </div>`;
+    }); }
+    html+=`</div></div>`;
+    panel.outerHTML=html;
+  } catch(e){ panel.innerHTML=`<div class="panel" id="player-panel"><h3>👥 Players</h3><p style="color:var(--danger);font-size:13px">Error loading players.</p></div>`; }
 }
 
 function renderSide(){
   const avail=Object.entries(spots).filter(([k,s])=>!s.reservedBy);
-  let html=`<div class="side-title">Places disponibles <span class="side-count">${avail.length}</span></div>`;
-  if(!avail.length){
-    html+=`<p class="side-empty">Aucune place disponible pour le moment.</p>`;
-  } else {
-    avail.forEach(([key,s])=>{
-      const g=GROUPS[s.group];
-      html+=`<div class="side-item" onclick="showSpotModal('${key}')">
-        <div><span class="gbadge ${g.badge}">${g.label}</span></div>
-        <div class="side-item-date" style="margin-top:4px">${cap(s.dateLabel)}</div>
-        <div class="side-item-price">$${g.price}</div>
-      </div>`;
-    });
-  }
+  let html=`<div class="side-title">Available spots <span class="side-badge">${avail.length}</span></div>`;
+  if(!avail.length){html+=`<p class="side-empty">No spots available right now.</p>`;}
+  else{avail.forEach(([key,s])=>{
+    const g=GROUPS[s.group];
+    html+=`<div class="side-item" onclick="showSpotModal('${key}')">
+      <span class="gbadge ${g.badge}">${g.label}</span>
+      <div class="side-date">${s.dateLabel}</div>
+      <div class="side-price">$${g.price}</div>
+    </div>`;
+  });}
   document.getElementById('side-panel').innerHTML=html;
 }
 
-// ── SPOT MODAL ──────────────────────────────────
-function showSpotModal(key){
-  const s=spots[key]; if(!s) return;
-  const g=GROUPS[s.group];
-  document.getElementById('res-title').textContent=g.label;
-  document.getElementById('res-sub').textContent=cap(s.dateLabel);
-
-  if(s.reservedBy){
-    const mine=currentUser&&!currentUser.isAdmin&&s.reservedBy===currentUser.name;
-    document.getElementById('res-body').innerHTML=`
-      <div class="reserved-box">⏳ Cette place est réservée par <strong>${s.reservedBy}</strong>.</div>`;
-    document.getElementById('res-actions').innerHTML=`
-      ${mine?`<button class="btn-primary" style="background:var(--danger)" onclick="cancelReserve('${key}')">Annuler ma réservation</button>`:''}
-      <button class="btn-cancel" onclick="closeModal('modal-reserve')" style="flex:1">Fermer</button>`;
-  } else {
-    document.getElementById('res-body').innerHTML=`
-      <div class="info-box">
-        <p>📧 <strong>E-transfer :</strong> ${ETRANSFER_EMAIL}</p>
-        <p class="info-price">$${g.price}</p>
-        <p style="font-size:12px;margin-top:8px;color:var(--accent-text)">Envoie le montant à cet email et cette place te sera confirmée.</p>
-      </div>`;
-    document.getElementById('res-actions').innerHTML=`
-      <button class="btn-cancel" onclick="closeModal('modal-reserve')">Fermer</button>
-      <button class="btn-primary" onclick="reserveSpot('${key}')">Réserver ma place</button>`;
-  }
-  document.getElementById('modal-reserve').style.display='block';
+// ── SPOT ACTIONS ────────────────────────────────
+async function addSpot(){
+  const val=document.getElementById('spot-select').value;
+  if(!val)return;
+  const [grp,dId,dLabel]=val.split('||');
+  await db.collection('spots').add({group:grp,dateId:dId,dateLabel:dLabel,reservedBy:null,createdAt:Date.now()});
 }
 
-function reserveSpot(key){
-  if(!spots[key]||spots[key].reservedBy) return;
-  spots[key].reservedBy=currentUser.name;
-  saveSpots(); closeModal('modal-reserve'); renderGrid(); renderSide();
+async function removeSpot(key){
+  if(!confirm('Remove this spot?'))return;
+  await db.collection('spots').doc(key).delete();
+  closeModal('modal-spot');
 }
 
-function cancelReserve(key){
-  if(!spots[key]) return;
-  if(spots[key].reservedBy!==currentUser.name){ alert('Tu ne peux pas annuler cette réservation.'); return; }
-  spots[key].reservedBy=null;
-  saveSpots(); closeModal('modal-reserve'); renderGrid(); renderSide();
-}
-
-// ── ADMIN ───────────────────────────────────────
-function showAdminLogin(){
-  document.getElementById('admin-pw').value='';
-  document.getElementById('pw-error').style.display='none';
-  document.getElementById('modal-admin').style.display='block';
-}
-function handleAdmin(){
-  if(isAdmin){ renderAll(); }
-  else{ showAdminLogin(); }
-}
-function checkAdmin(){
-  if(document.getElementById('admin-pw').value===ADMIN_PW){
-    isAdmin=true;
-    closeModal('modal-admin');
-    // If admin logged in from login screen (no currentUser), enter admin-only mode
-    if(!currentUser){
-      currentUser={name:'Admin',email:'',group:'advanced',isAdmin:true};
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('app').style.display='block';
-    }
-    renderAll();
-  } else { document.getElementById('pw-error').style.display='block'; }
-}
-
-function showDateGroupModal(dateId, grp, dateLabel){
-  const entries=getSpots(dateId,grp);
+function showCellModal(dId,grp,dateLabel){
+  const entries=getSpotsFor(dId,grp);
   const g=GROUPS[grp];
-  document.getElementById('res-title').textContent=g.label;
-  document.getElementById('res-sub').textContent=dateLabel;
-  let body='', actions='';
-  if(!entries.length){ closeModal('modal-reserve'); return; }
+  document.getElementById('spot-title').textContent=g.label;
+  document.getElementById('spot-sub').textContent=dateLabel;
+  let body='';
   entries.forEach(([key,s])=>{
     const isRes=!!s.reservedBy;
-    const mine=isRes&&currentUser&&s.reservedBy===currentUser.name;
-    const adminCanDel=isAdmin;
-    body+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px">
-      <div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <div class="spot-dot ${isRes?'reserved':'avail'}" style="width:10px;height:10px"></div>
-          <span style="font-size:13px;font-weight:500">${isRes?'Réservé par '+s.reservedBy:'Disponible'}</span>
+    const mine=!currentUser.isAdmin&&isRes&&s.reservedBy===currentUser.name;
+    body+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="spot-dot ${isRes?'reserved':'avail'}" style="width:10px;height:10px;flex-shrink:0"></div>
+        <div>
+          <div style="font-size:13px;font-weight:500">${isRes?'Reserved by '+s.reservedBy:'Available'}</div>
+          <div style="font-size:11px;color:var(--text3)">$${g.price}</div>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">$${g.price}</div>
       </div>
       <div style="display:flex;gap:6px">
-        ${!isRes&&!currentUser.isAdmin?`<button class="btn-primary" style="padding:5px 10px;font-size:12px" onclick="reserveSpot('${key}')">Réserver</button>`:''}
-        ${mine?`<button class="btn-cancel" style="padding:5px 10px;font-size:12px" onclick="cancelReserve('${key}')">Annuler</button>`:''}
-        ${adminCanDel?`<button class="btn-del" onclick="adminRemove('${key}')">🗑</button>`:''}
+        ${!isRes&&!currentUser.isAdmin?`<button class="btn-primary" style="padding:5px 12px;font-size:12px;flex:none" onclick="reserveSpot('${key}')">Reserve</button>`:''}
+        ${mine?`<button class="btn-cancel" style="padding:5px 10px;font-size:12px" onclick="cancelReservation('${key}')">Cancel</button>`:''}
+        ${isAdmin?`<button class="btn-red" onclick="removeSpot('${key}')">Remove</button>`:''}
       </div>
     </div>`;
   });
   if(!currentUser.isAdmin){
     body+=`<div class="info-box" style="margin-top:10px">
-      <p>📧 <strong>E-transfer :</strong> ${ETRANSFER_EMAIL}</p>
-      <p style="font-size:12px;margin-top:6px;color:var(--accent-text)">Envoie le montant après réservation.</p>
+      <p>📧 <strong>E-transfer:</strong> ${ETRANSFER_EMAIL}</p>
+      <p style="font-size:12px;margin-top:6px;color:var(--accent-text)">Send the amount after reserving your spot.</p>
+      <p class="info-price">$${g.price}</p>
     </div>`;
   }
-  document.getElementById('res-body').innerHTML=body;
-  document.getElementById('res-actions').innerHTML=`<button class="btn-cancel" onclick="closeModal('modal-reserve')" style="flex:1">Fermer</button>`;
-  document.getElementById('modal-reserve').style.display='block';
-}
-function adminAddSpot(){
-  const val=document.getElementById('add-select').value;
-  if(!val||!val.includes('||')) return;
-  const [grp,dateId]=val.split('||');
-  // Find date label
-  let dateLabel='';
-  SCHEDULE.forEach(({days})=>days.forEach(d=>{ if(d.id===dateId) dateLabel=d.label; }));
-  const key=`spot_${Date.now()}`;
-  spots[key]={group:grp,dateId,dateLabel,reservedBy:null};
-  saveSpots(); renderAll();
-}
-function adminRemove(key){
-  if(!confirm('Retirer cette place?')) return;
-  delete spots[key]; saveSpots(); closeModal('modal-reserve'); renderAll();
+  document.getElementById('spot-body').innerHTML=body;
+  document.getElementById('spot-actions').innerHTML=`<button class="btn-cancel" onclick="closeModal('modal-spot')" style="flex:1">Close</button>`;
+  document.getElementById('modal-spot').style.display='block';
 }
 
-function closeModal(id){ document.getElementById(id).style.display='none'; }
+function showSpotModal(key){
+  const s=spots[key]; if(!s) return;
+  showCellModal(s.dateId,s.group,s.dateLabel);
+}
 
-loadSpots();
+async function reserveSpot(key){
+  if(!spots[key]||spots[key].reservedBy)return;
+  await db.collection('spots').doc(key).update({reservedBy:currentUser.name});
+  closeModal('modal-spot');
+}
+
+async function cancelReservation(key){
+  if(!spots[key])return;
+  if(spots[key].reservedBy!==currentUser.name){alert('You cannot cancel this reservation.');return;}
+  await db.collection('spots').doc(key).update({reservedBy:null});
+  closeModal('modal-spot');
+}
+
+// ── PLAYER ADMIN ────────────────────────────────
+async function addPlayer(){
+  const name=document.getElementById('new-name').value.trim();
+  const email=document.getElementById('new-email').value.trim();
+  const pin=document.getElementById('new-pin').value.trim();
+  const group=document.getElementById('new-group').value;
+  if(!name||!email||pin.length!==4){alert('Please fill in all fields. PIN must be 4 digits.');return;}
+  const pinHash=await sha256(pin);
+  await db.collection('players').add({name,email,pinHash,group});
+  document.getElementById('new-name').value='';
+  document.getElementById('new-email').value='';
+  document.getElementById('new-pin').value='';
+  loadAdminPlayers();
+}
+
+async function removePlayer(id){
+  if(!confirm('Remove this player?'))return;
+  await db.collection('players').doc(id).delete();
+  loadAdminPlayers();
+}
+
+async function seedPlayers(){
+  if(!confirm(`Upload ${SEED_PLAYERS.advanced.length + SEED_PLAYERS.intermediate.length} players to Firebase? Only do this once.`))return;
+  const allPlayers=[
+    ...SEED_PLAYERS.advanced.map(p=>({...p,group:'advanced'})),
+    ...SEED_PLAYERS.intermediate.map(p=>({...p,group:'intermediate'}))
+  ];
+  let count=0;
+  for(const p of allPlayers){
+    const pinHash=await sha256(p.pin);
+    await db.collection('players').add({name:p.name,email:p.email,pinHash,group:p.group});
+    count++;
+  }
+  alert(`✅ ${count} players uploaded to Firebase.`);
+  loadAdminPlayers();
+}
+
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+// Focus first PIN digit on load
 document.getElementById('p0').focus();
 </script>
 </body>
