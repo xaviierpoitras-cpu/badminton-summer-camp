@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Badminton Excellence — Été 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: #e2ddd6;
+    --text: #1a1814;
+    --text2: #6b6660;
+    --text3: #a09b96;
+    --accent: #2d5a3d;
+    --accent-bg: #eaf2ed;
+    --accent-text: #1e3f2a;
+    --warn: #92400e;
+    --warn-bg: #fef3c7;
+    --danger: #991b1b;
+    --danger-bg: #fee2e2;
+    --info: #1e40af;
+    --info-bg: #eff6ff;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  .app-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .app-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .app-header p {
+    font-size: 12px;
+    opacity: 0.75;
+    margin-top: 1px;
+    font-family: 'DM Mono', monospace;
+  }
+  .header-right {
+    display: flex;
+    gap: 8px;
+  }
+  .nav-btn {
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.25);
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .nav-btn.active { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4); }
+  .admin-btn {
+    padding: 7px 14px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.25);
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .admin-btn.is-admin { background: rgba(255,255,255,0.2); color: #fff; }
+  .admin-btn:hover { background: rgba(255,255,255,0.12); }
+  .main {
+    max-width: 740px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+  }
+  .group-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+  }
+  .gtab {
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .gtab.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-value { font-size: 22px; font-weight: 600; color: var(--text); }
+  .week-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 1.25rem 0 8px;
+    font-family: 'DM Mono', monospace;
+  }
+  .practice-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-bottom: 8px;
+    transition: box-shadow 0.15s;
+  }
+  .practice-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .pcard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .pcard-date {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: capitalize;
+  }
+  .price-badge {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+  }
+  .spot-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    margin: 6px 0;
+  }
+  .spot-left { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--warn-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--warn);
+    flex-shrink: 0; font-family: 'DM Mono', monospace;
+  }
+  .avatar.admin { background: var(--danger-bg); color: var(--danger); }
+  .avatar.green { background: var(--accent-bg); color: var(--accent-text); }
+  .spot-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .spot-sub { font-size: 12px; color: var(--text3); }
+  .btn-contact {
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--accent);
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-contact:hover { background: var(--accent); color: #fff; }
+  .btn-icon {
+    width: 30px; height: 30px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text3);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-icon:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+  .no-spots { font-size: 13px; color: var(--text3); font-style: italic; padding: 2px 0; }
+  .btn-offer {
+    margin-top: 10px;
+    width: 100%;
+    padding: 9px;
+    border-radius: var(--radius);
+    border: 1px dashed var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-offer:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .player-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin: 3px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .chip-avatar {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--info-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 600; color: var(--info);
+    font-family: 'DM Mono', monospace;
+  }
+  .admin-badge {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid #fca5a5;
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    margin-bottom: 1rem;
+  }
+  .section-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .btn-add {
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--accent);
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 5px;
+    transition: all 0.15s;
+  }
+  .btn-add:hover { background: var(--accent); color: #fff; }
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+    padding: 1rem;
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    width: 360px;
+    max-width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal h3 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 1rem; }
+  .modal label { font-size: 13px; color: var(--text2); display: block; margin-top: 12px; margin-bottom: 4px; }
+  .modal input {
+    width: 100%;
+    font-size: 14px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1.25rem; }
+  .btn-primary {
+    flex: 1; padding: 10px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-cancel {
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-cancel:hover { background: var(--surface2); }
+  .contact-box {
+    background: var(--accent-bg);
+    border: 1px solid #b6d9c4;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 1rem;
+  }
+  .contact-box p { font-size: 14px; color: var(--accent-text); margin-bottom: 5px; }
+  .contact-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent-text);
+    margin-top: 10px;
+    font-family: 'DM Mono', monospace;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text3);
+    font-size: 14px;
+  }
+  .empty-state svg { margin-bottom: 12px; opacity: 0.35; }
+  .pw-error { font-size: 12px; color: var(--danger); margin-top: 6px; display: none; }
+  @media(max-width:520px){
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .app-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .header-right { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1>🏸 Badminton Excellence</h1>
+    <p>6 juillet – 14 août 2026 &nbsp;·&nbsp; Échange de places</p>
+  </div>
+  <div class="header-right" id="nav-buttons"></div>
+</header>
+
+<main class="main" id="main-content"></main>
+
+<!-- Modal: offrir place -->
+<div id="modal-offer" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-offer')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Offrir ma place</h3>
+      <p class="modal-sub" id="offer-lbl"></p>
+      <label>Ton prénom et nom</label>
+      <input id="offer-name" placeholder="ex: Marie Tremblay" autocomplete="name"/>
+      <label>Ton courriel</label>
+      <input id="offer-email" type="email" placeholder="ex: parent@email.com" autocomplete="email"/>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-offer')">Annuler</button>
+        <button class="btn-primary" onclick="submitOffer()">Publier ma place</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: voir contact -->
+<div id="modal-contact" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-contact')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Prendre cette place</h3>
+      <p class="modal-sub" id="contact-lbl"></p>
+      <div class="contact-box" id="contact-body"></div>
+      <p style="font-size:12px;color:var(--text3);margin-top:12px">Contacte ce joueur par courriel pour confirmer la place et effectuer le transfert e-transfer.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-contact')" style="flex:1">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: admin login -->
+<div id="modal-admin" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-admin')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Accès administrateur</h3>
+      <p class="modal-sub">Entrer le mot de passe pour accéder au panneau admin.</p>
+      <label>Mot de passe</label>
+      <input id="admin-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkAdmin()"/>
+      <p class="pw-error" id="pw-error">Mot de passe incorrect.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-admin')">Annuler</button>
+        <button class="btn-primary" onclick="checkAdmin()">Entrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: ajouter joueur -->
+<div id="modal-player" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-player')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Ajouter un joueur</h3>
+      <p class="modal-sub" id="player-group-lbl"></p>
+      <label>Prénom et nom</label>
+      <input id="player-name" placeholder="ex: Luca Martin" autocomplete="name"/>
+      <label>Courriel du parent</label>
+      <input id="player-email" type="email" placeholder="ex: parent@email.com" autocomplete="email"/>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-player')">Annuler</button>
+        <button class="btn-primary" onclick="submitPlayer()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PW = 'badminton2026';
+const PRICE_ADV = (250/9).toFixed(2);
+const PRICE_INT = (78/3).toFixed(2);
+const FR_DAYS = ['dim','lun','mar','mer','jeu','ven','sam'];
+const FR_MONTHS = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+
+let page = 'public';
+let groupTab = 'advanced';
+let isAdmin = false;
+let spots = {};
+let players = { advanced: [], intermediate: [] };
+let pendingOffer = null;
+let pendingPlayerGroup = null;
+
+// Storage helpers (localStorage fallback since this is a standalone HTML file)
+function saveData() {
+  localStorage.setItem('be_spots_v1', JSON.stringify(spots));
+  localStorage.setItem('be_players_v1', JSON.stringify(players));
+}
+
+function loadData() {
+  try {
+    const s = localStorage.getItem('be_spots_v1');
+    const p = localStorage.getItem('be_players_v1');
+    spots = s ? JSON.parse(s) : {};
+    players = p ? JSON.parse(p) : { advanced: [], intermediate: [] };
+  } catch(e) {
+    spots = {}; players = { advanced: [], intermediate: [] };
+  }
+}
+
+function genDates() {
+  const start = new Date(2026, 6, 6);
+  const out = { advanced: [], intermediate: [] };
+  for (let w = 0; w < 6; w++) {
+    [0, 2, 3].forEach(o => {
+      const d = new Date(start);
+      d.setDate(d.getDate() + w * 7 + o);
+      out.advanced.push({ label: `${FR_DAYS[d.getDay()]} ${d.getDate()} ${FR_MONTHS[d.getMonth()]}`, week: w + 1, id: `adv-${w}-${o}` });
+    });
+    const t = new Date(start);
+    t.setDate(t.getDate() + w * 7 + 1);
+    out.intermediate.push({ label: `${FR_DAYS[t.getDay()]} ${t.getDate()} ${FR_MONTHS[t.getMonth()]}`, week: w + 1, id: `int-${w}` });
+  }
+  return out;
+}
+const DATES = genDates();
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function initials(n) { return n.split(' ').map(w => w[0] || '').join('').substring(0, 2).toUpperCase(); }
+
+function setPage(p) {
+  page = p;
+  renderNav();
+  renderMain();
+}
+
+function setGroup(g) { groupTab = g; renderMain(); }
+
+function renderNav() {
+  const pages = [
+    { id: 'public', label: 'Places disponibles' },
+    { id: 'roster', label: 'Joueurs' },
+  ];
+  let html = pages.map(p =>
+    `<button class="nav-btn${page === p.id ? ' active' : ''}" onclick="setPage('${p.id}')">${p.label}</button>`
+  ).join('');
+  html += `<button class="admin-btn${isAdmin ? ' is-admin' : ''}" onclick="handleAdmin()">
+    ${isAdmin ? '⚙️ Admin' : '🔒 Admin'}
+  </button>`;
+  document.getElementById('nav-buttons').innerHTML = html;
+}
+
+function handleAdmin() {
+  if (isAdmin) { setPage('admin'); }
+  else { document.getElementById('admin-pw').value = ''; document.getElementById('pw-error').style.display = 'none'; document.getElementById('modal-admin').style.display = 'block'; }
+}
+
+function groupTabsHTML() {
+  return `<div class="group-tabs">
+    <button class="gtab${groupTab === 'advanced' ? ' active' : ''}" onclick="setGroup('advanced')">⚡ Avancé (Lun · Mer · Jeu)</button>
+    <button class="gtab${groupTab === 'intermediate' ? ' active' : ''}" onclick="setGroup('intermediate')">🏸 Intermédiaire (Mar)</button>
+  </div>`;
+}
+
+function renderMain() {
+  if (page === 'public') renderPublic();
+  else if (page === 'roster') renderRoster();
+  else if (page === 'admin') renderAdmin();
+}
+
+function renderPublic() {
+  const practices = DATES[groupTab];
+  const price = groupTab === 'advanced' ? PRICE_ADV : PRICE_INT;
+  const groupSpots = Object.values(spots).filter(s => s.group === groupTab).length;
+
+  let html = groupTabsHTML();
+  html += `<div class="stats">
+    <div class="stat"><div class="stat-label">Pratiques</div><div class="stat-value">${practices.length}</div></div>
+    <div class="stat"><div class="stat-label">Places offertes</div><div class="stat-value">${groupSpots}</div></div>
+    <div class="stat"><div class="stat-label">Prix / pratique</div><div class="stat-value">$${price}</div></div>
+  </div>`;
+
+  let lastW = 0;
+  practices.forEach(p => {
+    if (p.week !== lastW) { html += `<div class="week-label">— Semaine ${p.week}</div>`; lastW = p.week; }
+    const ps = Object.entries(spots).filter(([k, v]) => v.practiceId === p.id);
+    html += `<div class="practice-card">
+      <div class="pcard-header">
+        <span class="pcard-date">${cap(p.label)}</span>
+        <span class="price-badge">$${price} / place</span>
+      </div>`;
+    if (ps.length === 0) { html += `<p class="no-spots">Aucune place disponible pour cette pratique</p>`; }
+    else {
+      ps.forEach(([k, s]) => {
+        html += `<div class="spot-item">
+          <div class="spot-left">
+            <div class="avatar">${initials(s.name)}</div>
+            <div><div class="spot-name">${s.name}</div><div class="spot-sub">Place disponible</div></div>
+          </div>
+          <button class="btn-contact" onclick="showContact('${k}','${p.label}')">Voir contact →</button>
+        </div>`;
+      });
+    }
+    html += `<button class="btn-offer" onclick="showOffer('${p.id}','${p.label}')">
+      <span style="font-size:16px">+</span> Je ne serai pas là — offrir ma place
+    </button></div>`;
+  });
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function renderRoster() {
+  const grp = groupTab;
+  const pList = players[grp] || [];
+  let html = groupTabsHTML();
+
+  html += `<div class="section-card">
+    <div class="section-card-header">
+      <span class="section-title">${grp === 'advanced' ? '⚡ Groupe avancé' : '🏸 Groupe intermédiaire'} &nbsp;<span style="font-size:13px;font-weight:400;color:var(--text3)">${pList.length} joueur${pList.length !== 1 ? 's' : ''}</span></span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">`;
+  if (pList.length === 0) { html += `<p class="no-spots">Aucun joueur enregistré dans ce groupe.</p>`; }
+  else {
+    pList.forEach(p => {
+      html += `<div class="player-chip">
+        <div class="chip-avatar">${initials(p.name)}</div>${p.name}
+      </div>`;
+    });
+  }
+  html += `</div></div>`;
+
+  html += `<p class="section-title" style="margin-bottom:12px">Places offertes — ${grp === 'advanced' ? 'avancé' : 'intermédiaire'}</p>`;
+  const hasAny = Object.values(spots).some(s => s.group === grp);
+  if (!hasAny) {
+    html += `<div class="empty-state"><p>Aucune place offerte pour ce groupe.</p></div>`;
+  } else {
+    DATES[grp].forEach(p => {
+      const ps = Object.entries(spots).filter(([k, v]) => v.practiceId === p.id);
+      if (ps.length === 0) return;
+      html += `<div class="practice-card" style="margin-bottom:8px">
+        <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:10px">${cap(p.label)}</p>`;
+      ps.forEach(([k, s]) => {
+        html += `<div class="spot-item">
+          <div class="spot-left">
+            <div class="avatar">${initials(s.name)}</div>
+            <div><div class="spot-name">${s.name}</div><div class="spot-sub">${s.email}</div></div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function renderAdmin() {
+  const grp = groupTab;
+  const pList = players[grp] || [];
+  let html = `<div class="admin-badge">🔐 Mode administrateur activé</div>`;
+  html += groupTabsHTML();
+
+  html += `<div class="section-card">
+    <div class="section-card-header">
+      <span class="section-title">${grp === 'advanced' ? 'Groupe avancé' : 'Groupe intermédiaire'} — Joueurs</span>
+      <button class="btn-add" onclick="openAddPlayer('${grp}')">+ Ajouter</button>
+    </div>`;
+  if (pList.length === 0) { html += `<p class="no-spots">Aucun joueur.</p>`; }
+  else {
+    pList.forEach((p, i) => {
+      html += `<div class="spot-item">
+        <div class="spot-left">
+          <div class="avatar admin">${initials(p.name)}</div>
+          <div><div class="spot-name">${p.name}</div><div class="spot-sub">${p.email}</div></div>
+        </div>
+        <button class="btn-icon" onclick="removePlayer('${grp}',${i})" title="Retirer">🗑</button>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  html += `<p class="section-title" style="margin-bottom:12px">Gestion des places offertes</p>`;
+  const grpSpots = Object.entries(spots).filter(([k, v]) => v.group === grp);
+  if (grpSpots.length === 0) { html += `<div class="empty-state"><p>Aucune place offerte.</p></div>`; }
+  else {
+    grpSpots.forEach(([k, s]) => {
+      const practice = DATES[grp].find(p => p.id === s.practiceId);
+      html += `<div class="spot-item" style="background:var(--surface);border:1px solid var(--border);margin-bottom:6px">
+        <div class="spot-left">
+          <div class="avatar admin">${initials(s.name)}</div>
+          <div>
+            <div class="spot-name">${s.name}</div>
+            <div class="spot-sub">${practice ? cap(practice.label) : s.practiceId} &nbsp;·&nbsp; ${s.email}</div>
+          </div>
+        </div>
+        <button class="btn-icon" onclick="adminRemoveSpot('${k}')" title="Retirer">🗑</button>
+      </div>`;
+    });
+  }
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function showOffer(practiceId, label) {
+  pendingOffer = { practiceId, label };
+  document.getElementById('offer-lbl').textContent = cap(label) + ' — ' + (groupTab === 'advanced' ? 'Groupe avancé' : 'Groupe intermédiaire');
+  document.getElementById('offer-name').value = '';
+  document.getElementById('offer-email').value = '';
+  document.getElementById('modal-offer').style.display = 'block';
+  setTimeout(() => document.getElementById('offer-name').focus(), 100);
+}
+
+function submitOffer() {
+  const name = document.getElementById('offer-name').value.trim();
+  const email = document.getElementById('offer-email').value.trim();
+  if (!name || !email) { alert('Veuillez entrer ton nom et courriel.'); return; }
+  const key = `${pendingOffer.practiceId}_${Date.now()}`;
+  spots[key] = { practiceId: pendingOffer.practiceId, name, email, group: groupTab };
+  saveData();
+  closeModal('modal-offer');
+  renderMain();
+}
+
+function showContact(key, label) {
+  const s = spots[key]; if (!s) return;
+  const price = s.group === 'advanced' ? PRICE_ADV : PRICE_INT;
+  document.getElementById('contact-lbl').textContent = cap(label);
+  document.getElementById('contact-body').innerHTML = `
+    <p><strong>Joueur :</strong> ${s.name}</p>
+    <p style="margin-top:6px"><strong>Courriel :</strong> <a href="mailto:${s.email}" style="color:var(--accent-text)">${s.email}</a></p>
+    <p class="contact-price">💸 Montant : $${price}</p>`;
+  document.getElementById('modal-contact').style.display = 'block';
+}
+
+function checkAdmin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === ADMIN_PW) {
+    isAdmin = true;
+    closeModal('modal-admin');
+    setPage('admin');
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+  }
+}
+
+function openAddPlayer(grp) {
+  pendingPlayerGroup = grp;
+  document.getElementById('player-group-lbl').textContent = grp === 'advanced' ? 'Groupe avancé' : 'Groupe intermédiaire';
+  document.getElementById('player-name').value = '';
+  document.getElementById('player-email').value = '';
+  document.getElementById('modal-player').style.display = 'block';
+  setTimeout(() => document.getElementById('player-name').focus(), 100);
+}
+
+function submitPlayer() {
+  const name = document.getElementById('player-name').value.trim();
+  const email = document.getElementById('player-email').value.trim();
+  if (!name || !email) { alert('Nom et courriel requis.'); return; }
+  if (!players[pendingPlayerGroup]) players[pendingPlayerGroup] = [];
+  players[pendingPlayerGroup].push({ name, email });
+  saveData();
+  closeModal('modal-player');
+  renderMain();
+}
+
+function removePlayer(grp, i) {
+  if (!confirm('Retirer ce joueur?')) return;
+  players[grp].splice(i, 1);
+  saveData();
+  renderMain();
+}
+
+function adminRemoveSpot(key) {
+  if (!confirm('Retirer cette place?')) return;
+  delete spots[key];
+  saveData();
+  renderMain();
+}
+
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+loadData();
+renderNav();
+renderMain();
+</script>
+</body>
+</html>
