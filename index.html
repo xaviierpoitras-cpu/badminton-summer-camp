@@ -632,7 +632,7 @@ async function addPlayer(){
   const group=document.getElementById('new-group').value;
   if(!name||!email||pin.length!==4){alert('Please fill in all fields. PIN must be 4 digits.');return;}
   const pinHash=await sha256(pin);
-  await db.collection('players').add({name,email,pinHash,group});
+  await db.collection('players').add({name,email,pin,pinHash,group});
   document.getElementById('new-name').value='';
   document.getElementById('new-email').value='';
   document.getElementById('new-pin').value='';
@@ -654,7 +654,7 @@ async function seedPlayers(){
   let count=0;
   for(const p of allPlayers){
     const pinHash=await sha256(p.pin);
-    await db.collection('players').add({name:p.name,email:p.email,pinHash,group:p.group});
+    await db.collection('players').add({name:p.name,email:p.email,pin:p.pin,pinHash,group:p.group});
     count++;
   }
   alert(`✅ ${count} players uploaded to Firebase.`);
