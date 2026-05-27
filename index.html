@@ -6,109 +6,137 @@
 <title>Badminton Excellence — Été 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg:#f7f6f2;--surface:#fff;--surface2:#f0ede6;--border:#e2ddd6;
-    --text:#1a1814;--text2:#6b6660;--text3:#a09b96;
-    --accent:#2d5a3d;--accent-bg:#eaf2ed;--accent-text:#1e3f2a;
-    --warn:#92400e;--warn-bg:#fef3c7;
-    --danger:#991b1b;--danger-bg:#fee2e2;
-    --info:#1e40af;--info-bg:#eff6ff;
-    --radius:10px;--radius-lg:14px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+:root{
+  --bg:#f7f6f2;--surface:#fff;--surface2:#f0ede6;--border:#e2ddd6;
+  --text:#1a1814;--text2:#6b6660;--text3:#a09b96;
+  --accent:#2d5a3d;--accent-bg:#eaf2ed;--accent-text:#1e3f2a;
+  --warn:#92400e;--warn-bg:#fef3c7;
+  --danger:#991b1b;--danger-bg:#fee2e2;
+  --info:#1e40af;--info-bg:#eff6ff;
+  --adv1:#2d5a3d;--adv1-bg:#eaf2ed;
+  --adv2:#1e40af;--adv2-bg:#eff6ff;
+  --int1:#6d28d9;--int1-bg:#f5f3ff;
+  --int2:#b45309;--int2-bg:#fef3c7;
+  --radius:10px;--radius-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-  /* LOGIN */
-  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
-  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:380px;max-width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
-  .login-logo{font-size:36px;display:block;margin-bottom:10px}
-  .login-card h2{font-size:20px;font-weight:600;margin-bottom:4px}
-  .login-card p{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
-  .pin-input-wrap{display:flex;gap:8px;margin-bottom:1rem}
-  .pin-digit{width:56px;height:64px;font-size:28px;font-family:'DM Mono',monospace;font-weight:500;text-align:center;border:2px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
-  .pin-digit:focus{border-color:var(--accent)}
-  .pin-error{font-size:13px;color:var(--danger);margin-bottom:8px;display:none}
-  .btn-login{width:100%;padding:11px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
-  .btn-login:hover{opacity:.88}
+/* LOGIN */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:380px;max-width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-logo{font-size:36px;display:block;margin-bottom:10px}
+.login-card h2{font-size:20px;font-weight:600;margin-bottom:4px}
+.login-card p{font-size:14px;color:var(--text2);margin-bottom:1.5rem;line-height:1.5}
+.pin-wrap{display:flex;gap:10px;margin-bottom:1rem}
+.pin-digit{width:60px;height:68px;font-size:28px;font-family:'DM Mono',monospace;font-weight:500;text-align:center;border:2px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.pin-digit:focus{border-color:var(--accent)}
+.pin-error{font-size:13px;color:var(--danger);margin-bottom:8px;display:none}
+.btn-login{width:100%;padding:12px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
+.btn-login:hover{opacity:.88}
 
-  /* HEADER */
-  .app-header{background:var(--accent);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:12px;flex-wrap:wrap}
-  .app-header h1{font-size:17px;font-weight:600}
-  .app-header p{font-size:12px;opacity:.75;margin-top:1px;font-family:'DM Mono',monospace}
-  .header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:5px 12px 5px 6px;font-size:13px;font-weight:500;color:#fff}
-  .user-pill-av{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;font-family:'DM Mono',monospace}
-  .nav-btn{padding:7px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.8);cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
-  .nav-btn:hover{background:rgba(255,255,255,.12);color:#fff}
-  .nav-btn.active{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)}
-  .admin-btn{padding:7px 14px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.7);cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;transition:all .15s}
-  .admin-btn.is-admin{background:rgba(255,255,255,.2);color:#fff}
+/* HEADER */
+.app-header{background:var(--accent);color:#fff;padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;gap:12px;flex-wrap:wrap}
+.app-header h1{font-size:17px;font-weight:600}
+.app-header p{font-size:11px;opacity:.7;font-family:'DM Mono',monospace}
+.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.user-pill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 10px 4px 5px;font-size:12px;font-weight:500;color:#fff}
+.user-av{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;font-family:'DM Mono',monospace}
+.hbtn{padding:6px 12px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.8);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
+.hbtn:hover{background:rgba(255,255,255,.12);color:#fff}
+.hbtn.active{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)}
 
-  /* MAIN */
-  .main{max-width:740px;margin:0 auto;padding:1.5rem 1rem 3rem}
-  .group-tabs{display:flex;gap:8px;margin-bottom:1.25rem}
-  .gtab{padding:8px 18px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);font-family:'DM Sans',sans-serif;transition:all .15s}
-  .gtab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
-  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
-  .stat-label{font-size:12px;color:var(--text3);margin-bottom:4px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em}
-  .stat-value{font-size:22px;font-weight:600;color:var(--text)}
-  .week-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:1.25rem 0 8px;font-family:'DM Mono',monospace}
-  .practice-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:8px}
-  .pcard-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .pcard-date{font-size:15px;font-weight:600;color:var(--text);text-transform:capitalize}
-  .price-badge{font-size:12px;padding:3px 10px;border-radius:20px;background:var(--accent-bg);color:var(--accent-text);font-weight:500;font-family:'DM Mono',monospace}
-  .spot-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:var(--radius);margin:6px 0;gap:8px}
-  .spot-left{display:flex;align-items:center;gap:10px;min-width:0}
-  .avatar{width:32px;height:32px;border-radius:50%;background:var(--warn-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--warn);flex-shrink:0;font-family:'DM Mono',monospace}
-  .avatar.adm{background:var(--danger-bg);color:var(--danger)}
-  .avatar.grn{background:var(--accent-bg);color:var(--accent-text)}
-  .spot-name{font-size:14px;font-weight:500;color:var(--text)}
-  .spot-sub{font-size:12px;color:var(--text3)}
-  .spot-actions{display:flex;gap:6px;flex-shrink:0}
-  .btn-contact{padding:6px 12px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap}
-  .btn-contact:hover{background:var(--accent);color:#fff}
-  .btn-remove{padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
-  .btn-remove:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
-  .btn-icon{width:30px;height:30px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all .15s;flex-shrink:0;font-size:14px}
-  .btn-icon:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
-  .no-spots{font-size:13px;color:var(--text3);font-style:italic;padding:2px 0}
-  .btn-offer{margin-top:10px;width:100%;padding:9px;border-radius:var(--radius);border:1px dashed var(--border);background:transparent;color:var(--text2);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
-  .btn-offer:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
-  .section-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:12px}
-  .player-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border);margin:3px;font-size:13px;color:var(--text)}
-  .chip-av{width:20px;height:20px;border-radius:50%;background:var(--info-bg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--info);font-family:'DM Mono',monospace}
-  .admin-badge{background:var(--danger-bg);color:var(--danger);border:1px solid #fca5a5;border-radius:var(--radius);padding:8px 14px;font-size:13px;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
-  .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:1rem}
-  .section-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .btn-add{padding:6px 12px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;transition:all .15s}
-  .btn-add:hover{background:var(--accent);color:#fff}
-  .empty-state{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:14px}
-  .my-spot-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--accent-bg);color:var(--accent-text);font-weight:500}
+/* LAYOUT */
+.layout{display:flex;gap:0;min-height:calc(100vh - 56px)}
+.main-area{flex:1;padding:1.25rem;overflow-x:auto;min-width:0}
+.side-panel{width:260px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);padding:1rem;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px}
 
-  /* MODALS */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
-  .modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;width:360px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.15)}
-  .modal h3{font-size:17px;font-weight:600;margin-bottom:4px}
-  .modal-sub{font-size:13px;color:var(--text2);margin-bottom:1rem}
-  .modal label{font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px}
-  .modal input{width:100%;font-size:14px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
-  .modal input:focus{border-color:var(--accent)}
-  .modal-actions{display:flex;gap:8px;margin-top:1.25rem}
-  .btn-primary{flex:1;padding:10px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
-  .btn-primary:hover{opacity:.88}
-  .btn-cancel{padding:10px 18px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer}
-  .btn-cancel:hover{background:var(--surface2)}
-  .contact-box{background:var(--accent-bg);border:1px solid #b6d9c4;border-radius:var(--radius);padding:14px 16px;margin-top:1rem}
-  .contact-box p{font-size:14px;color:var(--accent-text);margin-bottom:5px}
-  .contact-price{font-size:16px;font-weight:600;color:var(--accent-text);margin-top:10px;font-family:'DM Mono',monospace}
-  .pw-error{font-size:12px;color:var(--danger);margin-top:6px;display:none}
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.dot-avail{background:#22c55e}
+.dot-reserved{background:#f59e0b}
+.dot-none{background:var(--border)}
 
-  @media(max-width:520px){
-    .stats{grid-template-columns:repeat(2,1fr)}
-    .app-header{flex-direction:column;align-items:flex-start}
-    .pin-digit{width:48px;height:56px;font-size:24px}
-  }
+/* GROUP BADGES */
+.gbadge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace}
+.gbadge-adv1{background:var(--adv1-bg);color:var(--adv1)}
+.gbadge-adv2{background:var(--adv2-bg);color:var(--adv2)}
+.gbadge-int1{background:var(--int1-bg);color:var(--int1)}
+.gbadge-int2{background:var(--int2-bg);color:var(--int2)}
+
+/* GRID */
+.week-block{margin-bottom:1rem}
+.week-title{font-size:12px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace;margin-bottom:6px;padding:4px 0;border-bottom:1px solid var(--border)}
+.grid-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.grid-table th{padding:9px 12px;text-align:center;font-size:12px;font-weight:600;color:var(--text2);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+.grid-table th:first-child{text-align:left;min-width:100px}
+.grid-table td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle}
+.grid-table td:first-child{text-align:left;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap}
+.grid-table tr:last-child td{border-bottom:none}
+.grid-table tr:hover td{background:var(--surface2)}
+.cell-na{color:var(--border);font-size:18px;line-height:1}
+.cell-avail{cursor:pointer}
+.cell-spot{display:inline-flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;border-radius:var(--radius);transition:background .15s}
+.cell-spot:hover{background:var(--surface2)}
+.spot-dot{width:14px;height:14px;border-radius:50%}
+.spot-dot.avail{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.spot-dot.reserved{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.2)}
+.spot-label{font-size:10px;color:var(--text3);white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
+
+/* SIDE LIST */
+.side-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.side-count{font-size:11px;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace}
+.side-item{padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.side-item:hover{border-color:var(--accent);background:var(--accent-bg)}
+.side-item-date{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:capitalize}
+.side-item-price{font-size:12px;font-weight:600;color:var(--accent);font-family:'DM Mono',monospace}
+.side-empty{font-size:13px;color:var(--text3);font-style:italic;text-align:center;padding:1rem 0}
+
+/* ADMIN */
+.admin-banner{background:var(--danger-bg);color:var(--danger);border:1px solid #fca5a5;border-radius:var(--radius);padding:8px 14px;font-size:13px;font-weight:500;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.add-spot-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:1rem}
+.add-spot-form h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.form-group{flex:1;min-width:140px}
+.form-group label{font-size:12px;color:var(--text2);display:block;margin-bottom:4px}
+.form-group select{width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none}
+.btn-add-spot{padding:9px 18px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
+.btn-add-spot:hover{opacity:.88}
+.admin-spot-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.admin-spot-list h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.admin-spot-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px}
+.admin-spot-info{font-size:13px;color:var(--text)}
+.admin-spot-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.btn-del{padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s;flex-shrink:0}
+.btn-del:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;width:360px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal h3{font-size:17px;font-weight:600;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:1rem}
+.modal label{font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px}
+.modal input{width:100%;font-size:14px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.modal input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:8px;margin-top:1.25rem}
+.btn-primary{flex:1;padding:10px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
+.btn-primary:hover{opacity:.88}
+.btn-cancel{padding:10px 18px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer}
+.btn-cancel:hover{background:var(--surface2)}
+.info-box{background:var(--accent-bg);border:1px solid #b6d9c4;border-radius:var(--radius);padding:14px 16px;margin-top:1rem}
+.info-box p{font-size:14px;color:var(--accent-text);margin-bottom:5px}
+.info-price{font-size:18px;font-weight:700;color:var(--accent-text);margin-top:8px;font-family:'DM Mono',monospace}
+.reserved-box{background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--radius);padding:12px 14px;margin-top:1rem;font-size:13px;color:var(--warn)}
+.pw-error{font-size:12px;color:var(--danger);margin-top:6px;display:none}
+
+@media(max-width:700px){
+  .side-panel{display:none}
+  .layout{flex-direction:column}
+  .main-area{padding:.75rem}
+  .pin-digit{width:52px;height:60px;font-size:24px}
+}
 </style>
 </head>
 <body>
@@ -118,12 +146,12 @@
   <div class="login-card">
     <span class="login-logo">🏸</span>
     <h2>Badminton Excellence</h2>
-    <p>Été 2026 · Échange de places<br>Entre ton code PIN personnel pour accéder.</p>
-    <div class="pin-input-wrap" id="pin-inputs">
-      <input class="pin-digit" maxlength="1" type="tel" id="p0" oninput="pinInput(0)" onkeydown="pinKey(event,0)"/>
-      <input class="pin-digit" maxlength="1" type="tel" id="p1" oninput="pinInput(1)" onkeydown="pinKey(event,1)"/>
-      <input class="pin-digit" maxlength="1" type="tel" id="p2" oninput="pinInput(2)" onkeydown="pinKey(event,2)"/>
-      <input class="pin-digit" maxlength="1" type="tel" id="p3" oninput="pinInput(3)" onkeydown="pinKey(event,3)"/>
+    <p>Été 2026 · Places disponibles<br>Entre ton code PIN personnel pour accéder.</p>
+    <div class="pin-wrap">
+      <input class="pin-digit" maxlength="1" type="tel" id="p0" oninput="pinInput(0)" onkeydown="pinKey(event,0)" autocomplete="off"/>
+      <input class="pin-digit" maxlength="1" type="tel" id="p1" oninput="pinInput(1)" onkeydown="pinKey(event,1)" autocomplete="off"/>
+      <input class="pin-digit" maxlength="1" type="tel" id="p2" oninput="pinInput(2)" onkeydown="pinKey(event,2)" autocomplete="off"/>
+      <input class="pin-digit" maxlength="1" type="tel" id="p3" oninput="pinInput(3)" onkeydown="pinKey(event,3)" autocomplete="off"/>
     </div>
     <p class="pin-error" id="pin-error">Code PIN incorrect. Contacte l'organisateur.</p>
     <button class="btn-login" onclick="checkPin()">Accéder →</button>
@@ -135,37 +163,24 @@
   <header class="app-header">
     <div>
       <h1>🏸 Badminton Excellence</h1>
-      <p>6 juillet – 14 août 2026 · Échange de places</p>
+      <p>6 juillet – 14 août 2026</p>
     </div>
-    <div class="header-right" id="nav-buttons"></div>
+    <div class="header-right" id="nav-btns"></div>
   </header>
-  <main class="main" id="main-content"></main>
-</div>
-
-<!-- Modal: offrir place -->
-<div id="modal-offer" style="display:none">
-  <div class="modal-overlay" onclick="closeModal('modal-offer')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <h3>Offrir ma place</h3>
-      <p class="modal-sub" id="offer-lbl"></p>
-      <p style="font-size:13px;color:var(--text2)">Connecté en tant que : <strong id="offer-user"></strong></p>
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeModal('modal-offer')">Annuler</button>
-        <button class="btn-primary" onclick="submitOffer()">Publier ma place</button>
-      </div>
-    </div>
+  <div class="layout">
+    <div class="main-area" id="main-area"></div>
+    <div class="side-panel" id="side-panel"></div>
   </div>
 </div>
 
-<!-- Modal: voir contact -->
-<div id="modal-contact" style="display:none">
-  <div class="modal-overlay" onclick="closeModal('modal-contact')">
+<!-- Modal: réserver -->
+<div id="modal-reserve" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-reserve')">
     <div class="modal" onclick="event.stopPropagation()">
-      <h3>Prendre cette place</h3>
-      <p class="modal-sub" id="contact-lbl"></p>
-      <div class="contact-box" id="contact-body"></div>
-      <p style="font-size:12px;color:var(--text3);margin-top:12px">Contacte ce joueur par courriel pour confirmer et effectuer le transfert e-transfer.</p>
-      <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-contact')" style="flex:1">Fermer</button></div>
+      <h3 id="res-title">Place disponible</h3>
+      <p class="modal-sub" id="res-sub"></p>
+      <div id="res-body"></div>
+      <div class="modal-actions" id="res-actions"></div>
     </div>
   </div>
 </div>
@@ -175,7 +190,6 @@
   <div class="modal-overlay" onclick="closeModal('modal-admin')">
     <div class="modal" onclick="event.stopPropagation()">
       <h3>Accès administrateur</h3>
-      <p class="modal-sub">Entrer le mot de passe admin.</p>
       <label>Mot de passe</label>
       <input id="admin-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkAdmin()"/>
       <p class="pw-error" id="pw-error">Mot de passe incorrect.</p>
@@ -188,10 +202,20 @@
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 //  ⚙️  CONFIGURATION
-// ═══════════════════════════════════════════════════════════
-const ADMIN_PW = 'badminton2026'; // ← changer le mot de passe admin ici
+// ═══════════════════════════════════════════════
+const ADMIN_PW       = 'badminton2026'; // ← mot de passe admin
+const ETRANSFER_EMAIL = 'samtessier01@hotmail.com';
+const PRICE_ADV = (250/9).toFixed(2); // Avancé 1 & 2
+const PRICE_INT = (78/3).toFixed(2);  // Intermédiaire 1 & 2
+
+const GROUPS = {
+  adv1: { label:'Avancé 1',      badge:'gbadge-adv1', weeks:'Sem. 1–3', price: PRICE_ADV },
+  adv2: { label:'Avancé 2',      badge:'gbadge-adv2', weeks:'Sem. 4–6', price: PRICE_ADV },
+  int1: { label:'Intermédiaire 1', badge:'gbadge-int1', weeks:'Sem. 1–3', price: PRICE_INT },
+  int2: { label:'Intermédiaire 2', badge:'gbadge-int2', weeks:'Sem. 4–6', price: PRICE_INT },
+};
 
 const PLAYERS_DB = {
   advanced: [
@@ -249,45 +273,58 @@ const PLAYERS_DB = {
     {name:"Maxime Brennan",email:"Genevieve.labreche@gmail.com",pin:"2822"},
   ]
 };
-// ═══════════════════════════════════════════════════════════
 
-const PRICE_ADV = (250/9).toFixed(2);
-const PRICE_INT = (78/3).toFixed(2);
-const FR_DAYS = ['dim','lun','mar','mer','jeu','ven','sam'];
-const FR_MONTHS = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+// ── DATES ──────────────────────────────────────
+const FR_DAYS=['dim','lun','mar','mer','jeu','ven','sam'];
+const FR_MONTHS=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+function fmtDate(d){ return `${FR_DAYS[d.getDay()]} ${d.getDate()} ${FR_MONTHS[d.getMonth()]}`; }
+function dateId(d){ return d.toISOString().split('T')[0]; }
 
-let page='public', groupTab='advanced', isAdmin=false, currentUser=null;
-let spots={}, pendingOffer=null;
-
-function saveSpots(){ localStorage.setItem('be_spots_v3', JSON.stringify(spots)); }
-function loadSpots(){ try{ const s=localStorage.getItem('be_spots_v3'); spots=s?JSON.parse(s):{}; }catch(e){ spots={}; } }
-
-function genDates(){
-  const start=new Date(2026,6,6), out={advanced:[],intermediate:[]};
+function genSchedule(){
+  const start=new Date(2026,6,6); // July 6
+  const weeks=[];
   for(let w=0;w<6;w++){
-    [0,2,3].forEach(o=>{
-      const d=new Date(start); d.setDate(d.getDate()+w*7+o);
-      out.advanced.push({label:`${FR_DAYS[d.getDay()]} ${d.getDate()} ${FR_MONTHS[d.getMonth()]}`,week:w+1,id:`adv-${w}-${o}`});
+    const days=[];
+    // Mon=+0, Tue=+1, Wed=+2, Thu=+3
+    [[0,'Mon'],[1,'Tue'],[2,'Wed'],[3,'Thu']].forEach(([off,key])=>{
+      const d=new Date(start); d.setDate(d.getDate()+w*7+off);
+      const isAdv=(key==='Mon'||key==='Wed'||key==='Thu');
+      const isInt=(key==='Tue');
+      const isFirst3=(w<3);
+      days.push({
+        date:d, label:fmtDate(d), id:dateId(d), key,
+        groups: isAdv
+          ? (isFirst3?['adv1']:['adv2'])
+          : (isFirst3?['int1']:['int2'])
+      });
     });
-    const t=new Date(start); t.setDate(t.getDate()+w*7+1);
-    out.intermediate.push({label:`${FR_DAYS[t.getDay()]} ${t.getDate()} ${FR_MONTHS[t.getMonth()]}`,week:w+1,id:`int-${w}`});
+    weeks.push({week:w+1, days});
   }
-  return out;
+  return weeks;
 }
-const DATES=genDates();
+const SCHEDULE=genSchedule();
 
+// ── STATE ──────────────────────────────────────
+let spots={}, currentUser=null, isAdmin=false, pendingSpot=null, page='grid';
+
+function saveSpots(){ localStorage.setItem('be_spots_v4',JSON.stringify(spots)); }
+function loadSpots(){ try{ const s=localStorage.getItem('be_spots_v4'); spots=s?JSON.parse(s):{}; }catch(e){ spots={}; } }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 function initials(n){ return n.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase(); }
 
-// ── PIN LOGIN ────────────────────────────────────────
+// Get spot for a specific date+group combo
+function getSpot(dateId, grp){
+  return Object.entries(spots).find(([k,v])=>v.dateId===dateId && v.group===grp);
+}
+
+// ── PIN LOGIN ───────────────────────────────────
 function pinInput(i){
   const v=document.getElementById(`p${i}`).value;
-  if(v && i<3) document.getElementById(`p${i+1}`).focus();
+  if(v&&i<3) document.getElementById(`p${i+1}`).focus();
   document.getElementById('pin-error').style.display='none';
 }
 function pinKey(e,i){
-  if(e.key==='Backspace' && !document.getElementById(`p${i}`).value && i>0)
-    document.getElementById(`p${i-1}`).focus();
+  if(e.key==='Backspace'&&!document.getElementById(`p${i}`).value&&i>0) document.getElementById(`p${i-1}`).focus();
   if(e.key==='Enter') checkPin();
 }
 function getPin(){ return [0,1,2,3].map(i=>document.getElementById(`p${i}`).value).join(''); }
@@ -300,150 +337,222 @@ function checkPin(){
     const p=PLAYERS_DB[grp].find(p=>p.pin===pin);
     if(p){ found={...p,group:grp}; break; }
   }
-  if(!found){ document.getElementById('pin-error').style.display='block'; [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value=''); document.getElementById('p0').focus(); return; }
+  if(!found){
+    document.getElementById('pin-error').style.display='block';
+    [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value='');
+    document.getElementById('p0').focus();
+    return;
+  }
   currentUser=found;
-  groupTab=found.group;
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  renderNav(); renderMain();
+  renderAll();
 }
+function logout(){ currentUser=null; isAdmin=false; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value=''); }
 
-function logout(){ currentUser=null; isAdmin=false; document.getElementById('app').style.display='none'; document.getElementById('login-screen').style.display='flex'; [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value=''); document.getElementById('pin-error').style.display='none'; }
+// ── RENDER ──────────────────────────────────────
+function renderAll(){ renderNav(); renderGrid(); renderSide(); }
 
-// ── NAV ──────────────────────────────────────────────
-function setPage(p){ page=p; renderNav(); renderMain(); }
-function setGroup(g){ groupTab=g; renderMain(); }
 function renderNav(){
   let html='';
-  if(currentUser) html+=`<div class="user-pill"><div class="user-pill-av">${initials(currentUser.name)}</div>${currentUser.name}</div>`;
-  html+=`<button class="nav-btn${page==='public'?' active':''}" onclick="setPage('public')">Places</button>`;
-  html+=`<button class="nav-btn${page==='roster'?' active':''}" onclick="setPage('roster')">Joueurs</button>`;
-  html+=`<button class="admin-btn${isAdmin?' is-admin':''}" onclick="handleAdmin()">${isAdmin?'⚙️ Admin':'🔒 Admin'}</button>`;
-  html+=`<button class="nav-btn" onclick="logout()">Changer →</button>`;
-  document.getElementById('nav-buttons').innerHTML=html;
-}
-function handleAdmin(){ if(isAdmin){ setPage('admin'); } else { document.getElementById('admin-pw').value=''; document.getElementById('pw-error').style.display='none'; document.getElementById('modal-admin').style.display='block'; } }
-
-// ── RENDER ────────────────────────────────────────────
-function renderMain(){ if(page==='public') renderPublic(); else if(page==='roster') renderRoster(); else if(page==='admin') renderAdmin(); }
-
-function groupTabsHTML(){
-  return `<div class="group-tabs">
-    <button class="gtab${groupTab==='advanced'?' active':''}" onclick="setGroup('advanced')">⚡ Avancé</button>
-    <button class="gtab${groupTab==='intermediate'?' active':''}" onclick="setGroup('intermediate')">🏸 Intermédiaire</button>
-  </div>`;
+  if(currentUser) html+=`<div class="user-pill"><div class="user-av">${initials(currentUser.name)}</div>${currentUser.name}</div>`;
+  html+=`<button class="hbtn${isAdmin?' active':''}" onclick="handleAdmin()">${isAdmin?'⚙️ Admin':'🔒 Admin'}</button>`;
+  html+=`<button class="hbtn" onclick="logout()">Changer →</button>`;
+  document.getElementById('nav-btns').innerHTML=html;
 }
 
-function canRemove(spot){ return isAdmin || (currentUser && spot.ownerName===currentUser.name && spot.ownerEmail===currentUser.email); }
+function renderGrid(){
+  let html='';
+  if(isAdmin) html+=`<div class="admin-banner">🔐 Mode administrateur — tu peux ajouter et retirer des places</div>`+renderAdminForm();
 
-function renderPublic(){
-  const practices=DATES[groupTab], price=groupTab==='advanced'?PRICE_ADV:PRICE_INT;
-  const gs=Object.values(spots).filter(s=>s.group===groupTab).length;
-  let html=groupTabsHTML();
-  html+=`<div class="stats">
-    <div class="stat"><div class="stat-label">Pratiques</div><div class="stat-value">${practices.length}</div></div>
-    <div class="stat"><div class="stat-label">Places offertes</div><div class="stat-value">${gs}</div></div>
-    <div class="stat"><div class="stat-label">Prix / pratique</div><div class="stat-value">$${price}</div></div>
+  html+=`<div class="legend">
+    <span style="font-size:12px;font-weight:500;color:var(--text2)">Légende :</span>
+    <div class="legend-item"><div class="dot dot-avail"></div>Disponible</div>
+    <div class="legend-item"><div class="dot dot-reserved"></div>Réservé</div>
+    <div class="legend-item"><div class="dot dot-none"></div>Pas de pratique</div>
   </div>`;
-  let lastW=0;
-  practices.forEach(p=>{
-    if(p.week!==lastW){ html+=`<div class="week-label">— Semaine ${p.week}</div>`; lastW=p.week; }
-    const ps=Object.entries(spots).filter(([k,v])=>v.practiceId===p.id);
-    html+=`<div class="practice-card"><div class="pcard-header"><span class="pcard-date">${cap(p.label)}</span><span class="price-badge">$${price}/place</span></div>`;
-    if(ps.length===0){ html+=`<p class="no-spots">Aucune place disponible</p>`; }
-    else { ps.forEach(([k,s])=>{
-      const mine=currentUser&&s.ownerName===currentUser.name&&s.ownerEmail===currentUser.email;
-      html+=`<div class="spot-item">
-        <div class="spot-left"><div class="avatar${mine?' grn':''}">${initials(s.ownerName)}</div>
-        <div><div class="spot-name">${s.ownerName}${mine?' <span class="my-spot-tag">Ma place</span>':''}</div><div class="spot-sub">Place disponible</div></div></div>
-        <div class="spot-actions">
-          ${!mine?`<button class="btn-contact" onclick="showContact('${k}','${p.label}')">Voir contact →</button>`:''}
-          ${canRemove(s)?`<button class="btn-remove" onclick="removeSpot('${k}')">Retirer</button>`:''}
-        </div></div>`;
-    }); }
-    const already=currentUser&&Object.values(spots).some(s=>s.practiceId===p.id&&s.ownerName===currentUser.name&&s.ownerEmail===currentUser.email);
-    if(!already) html+=`<button class="btn-offer" onclick="showOffer('${p.id}','${p.label}')"><span style="font-size:16px">+</span> Je ne serai pas là — offrir ma place</button>`;
-    html+=`</div>`;
+
+  // Group header colors
+  const thStyle={
+    adv1:`style="color:var(--adv1)"`,
+    adv2:`style="color:var(--adv2)"`,
+    int1:`style="color:var(--int1)"`,
+    int2:`style="color:var(--int2)"`,
+  };
+
+  SCHEDULE.forEach(({week,days})=>{
+    const wStart=days[0].label, wEnd=days[days.length-1].label;
+    html+=`<div class="week-block">
+      <div class="week-title">Semaine ${week} &nbsp;·&nbsp; ${cap(wStart)} – ${cap(wEnd)}</div>
+      <table class="grid-table">
+        <thead><tr>
+          <th>Date</th>
+          <th ${thStyle.adv1}>Avancé 1<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 1–3 · Lun/Mer/Jeu</span></th>
+          <th ${thStyle.adv2}>Avancé 2<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 4–6 · Lun/Mer/Jeu</span></th>
+          <th ${thStyle.int1}>Intermédiaire 1<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 1–3 · Mar</span></th>
+          <th ${thStyle.int2}>Intermédiaire 2<br><span style="font-size:10px;font-weight:400;opacity:.7">Sem. 4–6 · Mar</span></th>
+        </tr></thead>
+        <tbody>`;
+    days.forEach(day=>{
+      html+=`<tr><td>${cap(day.label)}</td>`;
+      ['adv1','adv2','int1','int2'].forEach(grp=>{
+        const practicesThisDay=day.groups.includes(grp);
+        if(!practicesThisDay){
+          html+=`<td><span class="cell-na">—</span></td>`;
+        } else {
+          const entry=getSpot(day.id,grp);
+          if(!entry){
+            html+=`<td><span style="font-size:11px;color:var(--text3)">–</span></td>`;
+          } else {
+            const [key,spot]=entry;
+            const isRes=spot.reservedBy!=null;
+            const shortName=isRes?spot.reservedBy.split(' ')[0]:'';
+            html+=`<td class="cell-avail" onclick="showSpotModal('${key}')">
+              <div class="cell-spot">
+                <div class="spot-dot ${isRes?'reserved':'avail'}"></div>
+                <div class="spot-label">${isRes?shortName:'Dispo'}</div>
+              </div></td>`;
+          }
+        }
+      });
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table></div>`;
   });
-  document.getElementById('main-content').innerHTML=html;
+
+  if(isAdmin) html+=renderAdminSpotList();
+  document.getElementById('main-area').innerHTML=html;
 }
 
-function renderRoster(){
-  const grp=groupTab, pList=PLAYERS_DB[grp];
-  let html=groupTabsHTML();
-  html+=`<div class="section-card"><div class="section-card-header">
-    <span class="section-title">${grp==='advanced'?'⚡ Groupe avancé':'🏸 Groupe intermédiaire'} <span style="font-size:13px;font-weight:400;color:var(--text3)">${pList.length} joueurs</span></span>
-  </div><div style="display:flex;flex-wrap:wrap;gap:4px">`;
-  pList.forEach(p=>{ html+=`<div class="player-chip"><div class="chip-av">${initials(p.name)}</div>${p.name}</div>`; });
-  html+=`</div></div>`;
-  html+=`<p class="section-title" style="margin-bottom:12px">Places offertes</p>`;
-  const hasAny=Object.values(spots).some(s=>s.group===grp);
-  if(!hasAny){ html+=`<div class="empty-state"><p>Aucune place offerte pour ce groupe.</p></div>`; }
-  else { DATES[grp].forEach(p=>{
-    const ps=Object.entries(spots).filter(([k,v])=>v.practiceId===p.id);
-    if(!ps.length) return;
-    html+=`<div class="practice-card" style="margin-bottom:8px"><p style="font-size:14px;font-weight:600;margin-bottom:10px">${cap(p.label)}</p>`;
-    ps.forEach(([k,s])=>{ html+=`<div class="spot-item"><div class="spot-left"><div class="avatar">${initials(s.ownerName)}</div><div><div class="spot-name">${s.ownerName}</div><div class="spot-sub">${s.ownerEmail}</div></div></div></div>`; });
-    html+=`</div>`;
-  }); }
-  document.getElementById('main-content').innerHTML=html;
+function renderAdminForm(){
+  // Build date options per group
+  const groupDates={adv1:[],adv2:[],int1:[],int2:[]};
+  SCHEDULE.forEach(({days})=>{
+    days.forEach(day=>{
+      day.groups.forEach(g=>{ groupDates[g].push({id:day.id,label:day.label}); });
+    });
+  });
+  let dateOpts='';
+  Object.entries(groupDates).forEach(([grp,dates])=>{
+    dates.forEach(d=>{
+      const exists=getSpot(d.id,grp);
+      if(!exists) dateOpts+=`<option value="${grp}||${d.id}">[${GROUPS[grp].label}] ${cap(d.label)}</option>`;
+    });
+  });
+  return `<div class="add-spot-form">
+    <h3>➕ Ajouter une place disponible</h3>
+    <div class="form-row">
+      <div class="form-group" style="flex:2">
+        <label>Groupe & date</label>
+        <select id="add-select">${dateOpts||'<option>Toutes les places sont déjà affichées</option>'}</select>
+      </div>
+    </div>
+    <button class="btn-add-spot" onclick="adminAddSpot()">Ajouter</button>
+  </div>`;
 }
 
-function renderAdmin(){
-  const grp=groupTab, pList=PLAYERS_DB[grp];
-  let html=`<div class="admin-badge">🔐 Mode administrateur activé</div>`;
-  html+=groupTabsHTML();
-  html+=`<div class="section-card"><div class="section-card-header"><span class="section-title">Joueurs & PINs — ${grp==='advanced'?'Avancé':'Intermédiaire'}</span></div>`;
-  pList.forEach((p,i)=>{ html+=`<div class="spot-item"><div class="spot-left"><div class="avatar adm">${initials(p.name)}</div>
-    <div><div class="spot-name">${p.name}</div><div class="spot-sub">${p.email}</div></div></div>
-    <span style="font-family:'DM Mono',monospace;font-weight:600;font-size:15px;background:var(--warn-bg);color:var(--warn);padding:4px 12px;border-radius:var(--radius)">${p.pin}</span>
-  </div>`; });
-  html+=`</div>`;
-  html+=`<p class="section-title" style="margin-bottom:12px">Places offertes — gestion</p>`;
-  const gs=Object.entries(spots).filter(([k,v])=>v.group===grp);
-  if(!gs.length){ html+=`<div class="empty-state"><p>Aucune place offerte.</p></div>`; }
-  else { gs.forEach(([k,s])=>{
-    const prac=DATES[grp].find(p=>p.id===s.practiceId);
-    html+=`<div class="spot-item" style="background:var(--surface);border:1px solid var(--border);margin-bottom:6px">
-      <div class="spot-left"><div class="avatar adm">${initials(s.ownerName)}</div>
-      <div><div class="spot-name">${s.ownerName}</div><div class="spot-sub">${prac?cap(prac.label):s.practiceId} · ${s.ownerEmail}</div></div></div>
-      <button class="btn-icon" onclick="adminRemoveSpot('${k}')">🗑</button></div>`;
-  }); }
-  document.getElementById('main-content').innerHTML=html;
+function renderAdminSpotList(){
+  const all=Object.entries(spots);
+  if(!all.length) return `<div class="admin-spot-list"><h3>Places affichées (0)</h3><p style="font-size:13px;color:var(--text3);font-style:italic">Aucune place affichée.</p></div>`;
+  let html=`<div class="admin-spot-list"><h3>Places affichées (${all.length})</h3>`;
+  all.forEach(([key,s])=>{
+    const g=GROUPS[s.group];
+    const resLabel=s.reservedBy?`Réservé par ${s.reservedBy}`:'Disponible';
+    html+=`<div class="admin-spot-item">
+      <div>
+        <div class="admin-spot-info"><span class="gbadge ${g.badge}">${g.label}</span> &nbsp;${cap(s.dateLabel)}</div>
+        <div class="admin-spot-sub">${resLabel} · $${g.price}</div>
+      </div>
+      <button class="btn-del" onclick="adminRemove('${key}')">Retirer</button>
+    </div>`;
+  });
+  return html+`</div>`;
 }
 
-// ── ACTIONS ───────────────────────────────────────────
-function showOffer(practiceId,label){
-  pendingOffer={practiceId,label};
-  document.getElementById('offer-lbl').textContent=cap(label)+' — '+(groupTab==='advanced'?'Groupe avancé':'Groupe intermédiaire');
-  document.getElementById('offer-user').textContent=currentUser.name;
-  document.getElementById('modal-offer').style.display='block';
+function renderSide(){
+  const avail=Object.entries(spots).filter(([k,s])=>!s.reservedBy);
+  let html=`<div class="side-title">Places disponibles <span class="side-count">${avail.length}</span></div>`;
+  if(!avail.length){
+    html+=`<p class="side-empty">Aucune place disponible pour le moment.</p>`;
+  } else {
+    avail.forEach(([key,s])=>{
+      const g=GROUPS[s.group];
+      html+=`<div class="side-item" onclick="showSpotModal('${key}')">
+        <div><span class="gbadge ${g.badge}">${g.label}</span></div>
+        <div class="side-item-date" style="margin-top:4px">${cap(s.dateLabel)}</div>
+        <div class="side-item-price">$${g.price}</div>
+      </div>`;
+    });
+  }
+  document.getElementById('side-panel').innerHTML=html;
 }
-function submitOffer(){
-  const key=`${pendingOffer.practiceId}_${Date.now()}`;
-  spots[key]={practiceId:pendingOffer.practiceId,ownerName:currentUser.name,ownerEmail:currentUser.email,group:groupTab};
-  saveSpots(); closeModal('modal-offer'); renderMain();
-}
-function showContact(key,label){
+
+// ── SPOT MODAL ──────────────────────────────────
+function showSpotModal(key){
   const s=spots[key]; if(!s) return;
-  const price=s.group==='advanced'?PRICE_ADV:PRICE_INT;
-  document.getElementById('contact-lbl').textContent=cap(label);
-  document.getElementById('contact-body').innerHTML=`
-    <p><strong>Joueur :</strong> ${s.ownerName}</p>
-    <p style="margin-top:6px"><strong>Courriel :</strong> <a href="mailto:${s.ownerEmail}" style="color:var(--accent-text)">${s.ownerEmail}</a></p>
-    <p class="contact-price">💸 Montant : $${price}</p>`;
-  document.getElementById('modal-contact').style.display='block';
+  const g=GROUPS[s.group];
+  document.getElementById('res-title').textContent=g.label;
+  document.getElementById('res-sub').textContent=cap(s.dateLabel);
+
+  if(s.reservedBy){
+    const mine=s.reservedBy===currentUser.name;
+    document.getElementById('res-body').innerHTML=`
+      <div class="reserved-box">⏳ Cette place est réservée par <strong>${s.reservedBy}</strong>.</div>`;
+    document.getElementById('res-actions').innerHTML=`
+      ${mine?`<button class="btn-primary" style="background:var(--danger)" onclick="cancelReserve('${key}')">Annuler ma réservation</button>`:''}
+      <button class="btn-cancel" onclick="closeModal('modal-reserve')" style="flex:1">Fermer</button>`;
+  } else {
+    document.getElementById('res-body').innerHTML=`
+      <div class="info-box">
+        <p>📧 <strong>E-transfer :</strong> ${ETRANSFER_EMAIL}</p>
+        <p class="info-price">$${g.price}</p>
+        <p style="font-size:12px;margin-top:8px;color:var(--accent-text)">Envoie le montant à cet email et cette place te sera confirmée.</p>
+      </div>`;
+    document.getElementById('res-actions').innerHTML=`
+      <button class="btn-cancel" onclick="closeModal('modal-reserve')">Fermer</button>
+      <button class="btn-primary" onclick="reserveSpot('${key}')">Réserver ma place</button>`;
+  }
+  document.getElementById('modal-reserve').style.display='block';
 }
-function removeSpot(key){
-  const s=spots[key]; if(!s||!canRemove(s)){ alert('Tu ne peux pas retirer cette place.'); return; }
-  if(!confirm('Retirer ta place?')) return;
-  delete spots[key]; saveSpots(); renderMain();
+
+function reserveSpot(key){
+  if(!spots[key]||spots[key].reservedBy) return;
+  spots[key].reservedBy=currentUser.name;
+  saveSpots(); closeModal('modal-reserve'); renderGrid(); renderSide();
+}
+
+function cancelReserve(key){
+  if(!spots[key]) return;
+  if(spots[key].reservedBy!==currentUser.name){ alert('Tu ne peux pas annuler cette réservation.'); return; }
+  spots[key].reservedBy=null;
+  saveSpots(); closeModal('modal-reserve'); renderGrid(); renderSide();
+}
+
+// ── ADMIN ───────────────────────────────────────
+function handleAdmin(){
+  if(isAdmin){ renderAll(); }
+  else{ document.getElementById('admin-pw').value=''; document.getElementById('pw-error').style.display='none'; document.getElementById('modal-admin').style.display='block'; }
 }
 function checkAdmin(){
-  if(document.getElementById('admin-pw').value===ADMIN_PW){ isAdmin=true; closeModal('modal-admin'); setPage('admin'); }
+  if(document.getElementById('admin-pw').value===ADMIN_PW){ isAdmin=true; closeModal('modal-admin'); renderAll(); }
   else{ document.getElementById('pw-error').style.display='block'; }
 }
-function adminRemoveSpot(key){ if(!confirm('Retirer cette place?')) return; delete spots[key]; saveSpots(); renderMain(); }
+function adminAddSpot(){
+  const val=document.getElementById('add-select').value;
+  if(!val||!val.includes('||')) return;
+  const [grp,dateId]=val.split('||');
+  // Find date label
+  let dateLabel='';
+  SCHEDULE.forEach(({days})=>days.forEach(d=>{ if(d.id===dateId) dateLabel=d.label; }));
+  const key=`spot_${Date.now()}`;
+  spots[key]={group:grp,dateId,dateLabel,reservedBy:null};
+  saveSpots(); renderAll();
+}
+function adminRemove(key){
+  if(!confirm('Retirer cette place?')) return;
+  delete spots[key]; saveSpots(); renderAll();
+}
+
 function closeModal(id){ document.getElementById(id).style.display='none'; }
 
 loadSpots();
