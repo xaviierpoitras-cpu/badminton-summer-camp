@@ -681,15 +681,30 @@ function renderMyReservations(){
 let payFilter = 'all';
 
 async function renderPayments(){
-  document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading...</p>';
-  let snap;
-  try {
-    snap = await db.collection('players').get();
-  } catch(e) {
-    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Error loading players: ${e.message}</p>`;
+  const el = document.getElementById('main-area');
+  if(!el){ setTimeout(renderPayments, 200); return; }
+  el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading payments...</p>';
+
+  // Ensure auth is ready
+  const user = firebase.auth().currentUser;
+  if(!user){
+    el.innerHTML = '<p style="color:var(--danger);padding:2rem;text-align:center">Not authenticated. Please sign in again.</p>';
     return;
   }
-  const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name));
+
+  let players = [];
+  try {
+    const snap = await db.collection('players').get();
+    players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  } catch(e) {
+    el.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Firebase error: ${e.message}<br><small>${e.code||''}</small></p>`;
+    return;
+  }
+
+  if(!players.length){
+    el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found in Firebase. Add players first.</p>';
+    return;
+  }
 
   const price  = p => (p.price || (p.group==='advanced'?250:78));
   const due    = p => (p.inBloc1?price(p):0)+(p.inBloc2?price(p):0);
