@@ -296,7 +296,8 @@ async function checkPin(){
       [0,1,2,3].forEach(i=>document.getElementById(`p${i}`).value='');
       document.getElementById('p0').focus();
     } else {
-      currentUser={...snap.docs[0].data(),docId:snap.docs[0].id};
+      const playerData = snap.docs[0].data();
+      currentUser={...playerData, docId:snap.docs[0].id, crossGroupPermission: !!playerData.crossGroupPermission};
       enterApp();
     }
   } catch(e){
@@ -371,6 +372,17 @@ function renderNav(){
     html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Admin</button>`;
   html+=`<button class="hbtn" onclick="logout()">Sign out</button>`;
   document.getElementById('nav-btns').innerHTML=html;
+}
+
+function spotLevel(grp){ return grp.startsWith('adv') ? 'advanced' : 'intermediate'; }
+
+function canReserve(spot){
+  if(!currentUser || currentUser.isAdmin) return false;
+  const sLevel = spotLevel(spot.group);
+  const pLevel = currentUser.group; // 'advanced' or 'intermediate'
+  if(sLevel === pLevel) return true;
+  if(currentUser.crossGroupPermission) return true; // admin backdoor
+  return false;
 }
 
 function getSpotsFor(dateId,grp){
@@ -562,10 +574,16 @@ async function loadAdminPlayers(){
       <div style="margin-top:14px">`;
     if(!players.length){html+=`<p style="font-size:13px;color:var(--text3);font-style:italic">No players yet. Add players using the form above.</p>`;}
     else{ players.forEach(p=>{
+      const hasCross = !!p.crossGroupPermission;
       html+=`<div class="admin-row">
-        <div><div class="admin-row-info">${p.name} <span style="font-size:11px;color:var(--text3)">(${p.group})</span> <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:2px 8px;border-radius:20px">${p.pin||'—'}</span></div>
+        <div><div class="admin-row-info">${p.name} <span style="font-size:11px;color:var(--text3)">(${p.group})</span> <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:2px 8px;border-radius:20px">${p.pin||'—'}</span>
+          ${hasCross?`<span style="background:#EFF6FF;color:#1E40AF;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;border:1px solid #BFDBFE">🔓 Cross-group</span>`:''}
+        </div>
         <div class="admin-row-sub">${p.email}</div></div>
-        <button class="btn-red" onclick="removePlayer('${p.id}')">Remove</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-green" style="padding:4px 10px;font-size:11px;background:${hasCross?'#991b1b':'#166534'}" onclick="toggleCrossGroup('${p.id}','${p.name}',${hasCross})">${hasCross?'Revoke cross-group':'Grant cross-group'}</button>
+          <button class="btn-red" onclick="removePlayer('${p.id}')">Remove</button>
+        </div>
       </div>`;
     }); }
     html+=`</div></div>`;
@@ -678,7 +696,7 @@ function showCellModal(dId,grp,dateLabel){
         </div>
       </div>
       <div style="display:flex;gap:6px">
-        ${!isRes&&!currentUser.isAdmin?`<button class="btn-primary" style="padding:5px 12px;font-size:12px;flex:none" onclick="reserveSpot('${key}')">Reserve</button>`:''}
+        ${!isRes&&!currentUser.isAdmin&&canReserve(s)?`<button class="btn-primary" style="padding:5px 12px;font-size:12px;flex:none" onclick="reserveSpot('${key}')">Reserve</button>`:(!isRes&&!currentUser.isAdmin&&!canReserve(s)?`<span style="font-size:11px;color:var(--text3);font-style:italic">Wrong group</span>`:'')}
         ${mine?`<button class="btn-cancel" style="padding:5px 10px;font-size:12px" onclick="cancelReservation('${key}')">Cancel</button>`:''}
         ${isAdmin?`<button class="btn-red" onclick="removeSpot('${key}')">Remove</button>`:''}
       </div>
@@ -703,7 +721,19 @@ function showSpotModal(key){
 
 async function reserveSpot(key){
   if(!spots[key]||spots[key].reservedBy)return;
+  const spot = spots[key];
+  // Check group permission
+  if(!canReserve(spot)){
+    alert('You can only reserve spots in your own group.');
+    return;
+  }
   await db.collection('spots').doc(key).update({reservedBy:currentUser.name});
+  // If used cross-group permission, revoke it
+  if(currentUser.crossGroupPermission && spotLevel(spot.group) !== currentUser.group){
+    await db.collection('players').doc(currentUser.docId).update({crossGroupPermission:false});
+    currentUser.crossGroupPermission = false;
+    alert('Your one-time cross-group permission has been used.');
+  }
   closeModal('modal-spot');
 }
 
@@ -743,6 +773,15 @@ async function addPlayer(){
   document.getElementById('new-pin').style.background='';
   document.getElementById('new-pin').style.fontWeight='';
   document.getElementById('new-pin').style.color='';
+  loadAdminPlayers();
+}
+
+async function toggleCrossGroup(id, name, current){
+  const msg = current
+    ? `Revoke cross-group permission for ${name}?`
+    : `Grant one-time cross-group reservation permission to ${name}?`;
+  if(!confirm(msg)) return;
+  await db.collection('players').doc(id).update({crossGroupPermission: !current});
   loadAdminPlayers();
 }
 
