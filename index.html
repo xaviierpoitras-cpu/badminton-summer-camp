@@ -679,95 +679,113 @@ function renderMyReservations(){
 let payFilter = 'all';
 
 async function renderPayments(){
-  document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading payments...</p>';
+  document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading...</p>';
   const snap = await db.collection('players').orderBy('name').get();
   const players = snap.docs.map(d=>({id:d.id,...d.data()}));
 
-  const price = p => (p.price || (p.group==='advanced'?250:78));
-  const totalDue = p => (p.inBloc1?price(p):0)+(p.inBloc2?price(p):0);
-  const totalPaid = p => (p.bloc1Paid?price(p):0)+(p.bloc2Paid?price(p):0);
-  const balance = p => totalDue(p)-totalPaid(p);
+  const price  = p => (p.price || (p.group==='advanced'?250:78));
+  const due    = p => (p.inBloc1?price(p):0)+(p.inBloc2?price(p):0);
+  const paid   = p => (p.bloc1Paid?price(p):0)+(p.bloc2Paid?price(p):0);
+  const bal    = p => due(p)-paid(p);
 
-  // Stats
-  const allDue   = players.reduce((s,p)=>s+totalDue(p),0);
-  const allPaid  = players.reduce((s,p)=>s+totalPaid(p),0);
-  const allBal   = allDue-allPaid;
-  const paidFull = players.filter(p=>balance(p)===0&&totalDue(p)>0).length;
-  const unpaid   = players.filter(p=>balance(p)>0).length;
+  const allDue   = players.reduce((s,p)=>s+due(p),0);
+  const allPaid  = players.reduce((s,p)=>s+paid(p),0);
+  const paidFull = players.filter(p=>bal(p)===0&&due(p)>0).length;
+  const b1Email  = players.filter(p=>p.inBloc1&&p.bloc1EmailSent).length;
+  const b1Total  = players.filter(p=>p.inBloc1).length;
+  const b2Email  = players.filter(p=>p.inBloc2&&p.bloc2EmailSent).length;
+  const b2Total  = players.filter(p=>p.inBloc2).length;
 
-  // Filter
-  let filtered = players;
-  if(payFilter==='unpaid') filtered=players.filter(p=>balance(p)>0);
-  if(payFilter==='paid')   filtered=players.filter(p=>balance(p)===0&&totalDue(p)>0);
-  if(payFilter==='email-not-sent') filtered=players.filter(p=>(p.inBloc1&&!p.bloc1EmailSent)||(p.inBloc2&&!p.bloc2EmailSent));
-  if(payFilter==='advanced')     filtered=players.filter(p=>p.group==='advanced');
-  if(payFilter==='intermediate') filtered=players.filter(p=>p.group==='intermediate');
+  let filtered = [...players];
+  if(payFilter==='unpaid')          filtered=players.filter(p=>bal(p)>0);
+  if(payFilter==='paid')            filtered=players.filter(p=>bal(p)===0&&due(p)>0);
+  if(payFilter==='email-not-sent')  filtered=players.filter(p=>(p.inBloc1&&!p.bloc1EmailSent)||(p.inBloc2&&!p.bloc2EmailSent));
+  if(payFilter==='advanced')        filtered=players.filter(p=>p.group==='advanced');
+  if(payFilter==='intermediate')    filtered=players.filter(p=>p.group==='intermediate');
 
   let html=`
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
-    <h2 style="font-size:18px;font-weight:600;color:var(--text)">💳 Payment Tracking</h2>
-    <button class="btn-green" style="font-size:12px;padding:6px 12px;background:#B45309;border-color:#B45309" onclick="seedBlocData()">↓ Sync from Excel</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
+    <div>
+      <h2 style="font-size:18px;font-weight:600;color:var(--text)">Payment Tracking</h2>
+      <p style="font-size:13px;color:var(--text2);margin-top:2px">${players.length} players · Bloc payments</p>
+    </div>
+    <button onclick="seedBlocData()" style="padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">↓ Sync from Excel</button>
   </div>
-  <div class="pay-summary">
-    <div class="pay-stat"><div class="pay-stat-label">Total Due</div><div class="pay-stat-value">$${allDue.toLocaleString()}</div></div>
-    <div class="pay-stat"><div class="pay-stat-label">Collected</div><div class="pay-stat-value" style="color:#166534">$${allPaid.toLocaleString()}</div></div>
-    <div class="pay-stat"><div class="pay-stat-label">Outstanding</div><div class="pay-stat-value" style="color:var(--danger)">$${allBal.toLocaleString()}</div></div>
-    <div class="pay-stat"><div class="pay-stat-label">Fully paid</div><div class="pay-stat-value">${paidFull}/${players.length}</div></div>
-    <div class="pay-stat"><div class="pay-stat-label">Emails sent</div><div class="pay-stat-value" style="font-size:16px">B1: ${players.filter(p=>p.inBloc1&&p.bloc1EmailSent).length}/${players.filter(p=>p.inBloc1).length} · B2: ${players.filter(p=>p.inBloc2&&p.bloc2EmailSent).length}/${players.filter(p=>p.inBloc2).length}</div></div>
+
+  <div class="stats" style="margin-bottom:1.25rem">
+    <div class="stat"><div class="stat-label">Total due</div><div class="stat-value" style="font-size:18px">$${allDue.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-label">Collected</div><div class="stat-value" style="font-size:18px;color:var(--accent)">$${allPaid.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-label">Outstanding</div><div class="stat-value" style="font-size:18px;color:var(--danger)">$${(allDue-allPaid).toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-label">Fully paid</div><div class="stat-value" style="font-size:18px">${paidFull}/${players.length}</div></div>
+    <div class="stat"><div class="stat-label">Emails sent</div><div class="stat-value" style="font-size:14px;margin-top:2px">B1 ${b1Email}/${b1Total}<br>B2 ${b2Email}/${b2Total}</div></div>
   </div>
-  <div class="pay-filter">
-    ${['all','unpaid','paid','email-not-sent','advanced','intermediate'].map(f=>
-      `<button class="pay-filter-btn${payFilter===f?' active':''}" onclick="setPayFilter('${f}')">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`
+
+  <div class="group-tabs" style="margin-bottom:1.25rem">
+    ${[['all','All'],['unpaid','Unpaid'],['paid','Paid'],['email-not-sent','Email pending'],['advanced','Advanced'],['intermediate','Intermediate']].map(([f,l])=>
+      `<button class="gtab${payFilter===f?' active':''}" onclick="setPayFilter('${f}')">${l}</button>`
     ).join('')}
-  </div>
-  <div class="panel" style="padding:0;overflow:hidden">`;
+  </div>`;
 
-  if(!filtered.length){ html+=`<p style="padding:1.5rem;color:var(--text3);text-align:center;font-style:italic">No players match this filter.</p>`; }
+  if(!filtered.length){
+    html+=`<div style="text-align:center;padding:3rem;color:var(--text3);font-size:14px">No players match this filter.</div>`;
+  } else {
+    filtered.forEach(p=>{
+      const b1paid=!!p.bloc1Paid, b2paid=!!p.bloc2Paid;
+      const b1email=!!p.bloc1EmailSent, b2email=!!p.bloc2EmailSent;
+      const pDue=due(p), pPaid=paid(p), pBal=bal(p);
+      const fullyPaid = pBal===0&&pDue>0;
 
-  filtered.forEach(p=>{
-    const due=totalDue(p), paid=totalPaid(p), bal=balance(p);
-    const b1paid=!!p.bloc1Paid, b2paid=!!p.bloc2Paid;
-    const hasSub = p.subgroup||'';
-    html+=`<div class="pay-row">
-      <div style="min-width:0;flex:1">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-          <span style="font-size:14px;font-weight:500;color:var(--text)">${p.name}</span>
-          <span style="font-size:11px;color:var(--text3)">${hasSub||p.group}</span>
-          ${bal===0&&due>0?'<span class="pay-badge paid">✅ Fully paid</span>':bal>0?`<span class="pay-badge unpaid">$${bal} due</span>`:''}
+      html+=`<div class="practice-card" style="margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+              <span style="font-size:15px;font-weight:600;color:var(--text)">${p.name}</span>
+              <span class="gbadge ${p.group==='advanced'?'gbadge-adv1':'gbadge-int1'}">${p.subgroup||p.group}</span>
+              ${fullyPaid
+                ?`<span style="background:var(--accent-bg);color:var(--accent-text);font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid #b6d9c4">✅ Fully paid</span>`
+                :pBal>0?`<span style="background:var(--warn-bg);color:var(--warn);font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid #fcd34d">$${pBal} outstanding</span>`:''}
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              ${p.inBloc1?`
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--surface2);border-radius:var(--radius)">
+                <span style="font-size:13px;font-weight:500;color:var(--text2);min-width:70px">Bloc 1</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">$${price(p)}</span>
+                <span style="font-size:12px;padding:2px 8px;border-radius:20px;font-weight:500;background:${b1paid?'#DCFCE7':'#FEF9C3'};color:${b1paid?'#166534':'#854D0E'};border:1px solid ${b1paid?'#86EFAC':'#FDE047'}">${b1paid?'✅ Paid':'⏳ Unpaid'}</span>
+                ${b1paid&&p.bloc1PaidDate?`<span style="font-size:11px;color:var(--text3)">📅 ${p.bloc1PaidDate}</span>`:''}
+                <button class="btn${b1paid?'-cancel':'-contact'}" style="padding:4px 12px;font-size:12px;border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${b1paid?'var(--border)':'var(--accent)'};background:${b1paid?'transparent':'var(--accent-bg)'};color:${b1paid?'var(--text2)':'var(--accent-text)'}" onclick="togglePayment('${p.id}','bloc1',${b1paid})">${b1paid?'Mark unpaid':'Mark paid'}</button>
+                <span style="width:1px;height:16px;background:var(--border);margin:0 2px"></span>
+                <span style="font-size:11px;color:var(--text3)">Email:</span>
+                <button style="padding:3px 10px;border-radius:var(--radius);font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${b1email?'var(--border)':'#86EFAC'};background:${b1email?'transparent':'#DCFCE7'};color:${b1email?'var(--text3)':'#166534'}" onclick="toggleEmail('${p.id}','bloc1',${b1email})">${b1email?'✉️ Sent':'Send'}</button>
+                ${b1email&&p.bloc1EmailDate?`<span style="font-size:10px;color:var(--text3)">${p.bloc1EmailDate}</span>`:''}
+              </div>`:''}
+
+              ${p.inBloc2?`
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--surface2);border-radius:var(--radius)">
+                <span style="font-size:13px;font-weight:500;color:var(--text2);min-width:70px">Bloc 2</span>
+                <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">$${price(p)}</span>
+                <span style="font-size:12px;padding:2px 8px;border-radius:20px;font-weight:500;background:${b2paid?'#DCFCE7':'#FEF9C3'};color:${b2paid?'#166534':'#854D0E'};border:1px solid ${b2paid?'#86EFAC':'#FDE047'}">${b2paid?'✅ Paid':'⏳ Unpaid'}</span>
+                ${b2paid&&p.bloc2PaidDate?`<span style="font-size:11px;color:var(--text3)">📅 ${p.bloc2PaidDate}</span>`:''}
+                <button class="btn${b2paid?'-cancel':'-contact'}" style="padding:4px 12px;font-size:12px;border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${b2paid?'var(--border)':'var(--accent)'};background:${b2paid?'transparent':'var(--accent-bg)'};color:${b2paid?'var(--text2)':'var(--accent-text)'}" onclick="togglePayment('${p.id}','bloc2',${b2paid})">${b2paid?'Mark unpaid':'Mark paid'}</button>
+                <span style="width:1px;height:16px;background:var(--border);margin:0 2px"></span>
+                <span style="font-size:11px;color:var(--text3)">Email:</span>
+                <button style="padding:3px 10px;border-radius:var(--radius);font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${b2email?'var(--border)':'#86EFAC'};background:${b2email?'transparent':'#DCFCE7'};color:${b2email?'var(--text3)':'#166534'}" onclick="toggleEmail('${p.id}','bloc2',${b2email})">${b2email?'✉️ Sent':'Send'}</button>
+                ${b2email&&p.bloc2EmailDate?`<span style="font-size:10px;color:var(--text3)">${p.bloc2EmailDate}</span>`:''}
+              </div>`:''}
+            </div>
+          </div>
+
+          <div style="text-align:right;flex-shrink:0;padding-top:2px">
+            <div style="font-size:14px;font-weight:600;color:var(--text)">$${pPaid} / $${pDue}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${p.email}</div>
+          </div>
+
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${p.inBloc1?`<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:4px">
-            <span style="font-size:12px;color:var(--text2);font-weight:500">Bloc 1 — $${price(p)}</span>
-            <span class="pay-badge ${b1paid?'paid':'unpaid'}">${b1paid?'✅ Paid':'⏳ Unpaid'}</span>
-            ${b1paid&&p.bloc1PaidDate?`<span style="font-size:10px;color:var(--text3)">📅 ${p.bloc1PaidDate}</span>`:''}
-            <button class="pay-toggle ${b1paid?'mark-unpaid':'mark-paid'}" onclick="togglePayment('${p.id}','bloc1',${b1paid})">${b1paid?'Mark unpaid':'Mark paid'}</button>
-            <span style="display:flex;align-items:center;gap:4px;margin-left:4px">
-              <span style="font-size:11px;color:var(--text3)">Email:</span>
-              <button class="pay-toggle ${p.bloc1EmailSent?'mark-unpaid':'mark-paid'}" style="font-size:11px;padding:3px 8px" onclick="toggleEmail('${p.id}','bloc1',${!!p.bloc1EmailSent})">${p.bloc1EmailSent?'✉️ Sent':'Send email'}</button>
-              ${p.bloc1EmailSent&&p.bloc1EmailDate?`<span style="font-size:10px;color:var(--text3)">${p.bloc1EmailDate}</span>`:''}
-            </span>
-          </div>`:'<span class="pay-badge na" style="margin-bottom:4px;display:inline-block">Not in Bloc 1</span>'}
-          ${p.inBloc2?`<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-            <span style="font-size:12px;color:var(--text2);font-weight:500">Bloc 2 — $${price(p)}</span>
-            <span class="pay-badge ${b2paid?'paid':'unpaid'}">${b2paid?'✅ Paid':'⏳ Unpaid'}</span>
-            ${b2paid&&p.bloc2PaidDate?`<span style="font-size:10px;color:var(--text3)">📅 ${p.bloc2PaidDate}</span>`:''}
-            <button class="pay-toggle ${b2paid?'mark-unpaid':'mark-paid'}" onclick="togglePayment('${p.id}','bloc2',${b2paid})">${b2paid?'Mark unpaid':'Mark paid'}</button>
-            <span style="display:flex;align-items:center;gap:4px;margin-left:4px">
-              <span style="font-size:11px;color:var(--text3)">Email:</span>
-              <button class="pay-toggle ${p.bloc2EmailSent?'mark-unpaid':'mark-paid'}" style="font-size:11px;padding:3px 8px" onclick="toggleEmail('${p.id}','bloc2',${!!p.bloc2EmailSent})">${p.bloc2EmailSent?'✉️ Sent':'Send email'}</button>
-              ${p.bloc2EmailSent&&p.bloc2EmailDate?`<span style="font-size:10px;color:var(--text3)">${p.bloc2EmailDate}</span>`:''}
-            </span>
-          </div>`:'<span class="pay-badge na">Not in Bloc 2</span>'}
-        </div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:13px;font-weight:600;color:var(--text)">$${paid} / $${due}</div>
-        <div style="font-size:11px;color:var(--text3)">${p.email}</div>
-      </div>
-    </div>`;
-  });
+      </div>`;
+    });
+  }
 
-  html+=`</div>`;
   document.getElementById('main-area').innerHTML = html;
 }
 
