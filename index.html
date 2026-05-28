@@ -682,8 +682,14 @@ let payFilter = 'all';
 
 async function renderPayments(){
   document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading...</p>';
-  const snap = await db.collection('players').orderBy('name').get();
-  const players = snap.docs.map(d=>({id:d.id,...d.data()}));
+  let snap;
+  try {
+    snap = await db.collection('players').get();
+  } catch(e) {
+    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Error loading players: ${e.message}</p>`;
+    return;
+  }
+  const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name));
 
   const price  = p => (p.price || (p.group==='advanced'?250:78));
   const due    = p => (p.inBloc1?price(p):0)+(p.inBloc2?price(p):0);
@@ -790,8 +796,14 @@ async function updateBloc(id, field, value){
 }
 
 async function downloadPaymentExcel(){
-  const snap = await db.collection('players').orderBy('name').get();
-  const players = snap.docs.map(d=>({id:d.id,...d.data()}));
+  let snap;
+  try {
+    snap = await db.collection('players').get();
+  } catch(e) {
+    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Error loading players: ${e.message}</p>`;
+    return;
+  }
+  const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name));
   const priceOf = p => p.price||(p.group==='advanced'?250:78);
   const due  = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
   const paid = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0);
