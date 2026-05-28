@@ -378,8 +378,6 @@ function getSpotsFor(dateId,grp){
 
 function renderGrid(){
   let html='';
-  if(isAdmin) html+=`<div class="admin-banner">🔐 Administrator mode</div>`+renderAdminPanel();
-
   html+=`<div class="legend">
     <span style="font-size:12px;font-weight:500;color:var(--text2)">Legend:</span>
     <div class="legend-item"><div class="dot dot-avail"></div>Available</div>
@@ -416,6 +414,12 @@ function renderGrid(){
     html+=`</tbody></table></div>`;
   });
   document.getElementById('main-area').innerHTML=html;
+}
+
+function renderAdmin(){
+  let html = `<div class="admin-banner">🔐 Administrator mode</div>` + renderAdminPanel();
+  document.getElementById('main-area').innerHTML = html;
+  setTimeout(loadAdminPlayers, 100);
 }
 
 function renderAdminPanel(){
