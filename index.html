@@ -473,10 +473,25 @@ function renderAdminPanel(){
   const allSpots=Object.entries(spots);
   let spotRows=allSpots.length?allSpots.map(([key,s])=>{
     const g=GROUPS[s.group];
-    return `<div class="admin-row">
-      <div><div class="admin-row-info"><span class="gbadge ${g.badge}">${g.label}</span> ${s.dateLabel}</div>
-      <div class="admin-row-sub">${s.reservedBy?'Reserved by '+s.reservedBy:'Available'} · $${g.price}</div></div>
-      <button class="btn-red" onclick="removeSpot('${key}')">Remove</button>
+    const isRes=!!s.reservedBy;
+    const isPaid=!!s.paid;
+    return `<div class="admin-spot-card${isRes?' is-reserved':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="gbadge ${g.badge}">${g.label}</span>
+          <span style="font-size:13px;font-weight:500;color:var(--text)">${s.dateLabel}</span>
+          ${isRes
+            ? `<span class="reserved-badge">🔴 ${s.reservedBy}</span>
+               ${isPaid
+                 ? `<span class="paid-badge">✅ Paid</span>`
+                 : `<span class="unpaid-badge">⏳ Unpaid</span>`}`
+            : `<span style="font-size:12px;color:var(--text3)">Available · $${g.price}</span>`}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${isRes?`<button class="btn-green" style="padding:5px 12px;font-size:12px;background:${isPaid?'#991b1b':'#166534'};opacity:1" onclick="togglePaid('${key}')">${isPaid?'Mark unpaid':'Mark paid'}</button>`:''}
+          <button class="btn-red" onclick="removeSpot('${key}')">Remove</button>
+        </div>
+      </div>
     </div>`;
   }).join(''):'<p style="font-size:13px;color:var(--text3);font-style:italic">No spots posted.</p>';
 
@@ -681,6 +696,12 @@ async function seedPlayers(){
   }
   alert(`✅ ${count} players uploaded to Firebase.`);
   loadAdminPlayers();
+}
+
+async function togglePaid(key){
+  if(!spots[key]) return;
+  const newVal = !spots[key].paid;
+  await db.collection('spots').doc(key).update({paid: newVal});
 }
 
 function closeModal(id){document.getElementById(id).style.display='none';}
