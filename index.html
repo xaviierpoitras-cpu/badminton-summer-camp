@@ -675,36 +675,36 @@ function renderMyReservations(){
     });
   }
 
-  document.getElementById('main-area').innerHTML = html;
+  el.innerHTML = html;
 }
 
 let payFilter = 'all';
 
-async function renderPayments(){
+let paymentsUnsubscribe = null;
+
+function renderPayments(){
   const el = document.getElementById('main-area');
   if(!el){ setTimeout(renderPayments, 200); return; }
   el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading payments...</p>';
 
-  // Ensure auth is ready
-  const user = firebase.auth().currentUser;
-  if(!user){
-    el.innerHTML = '<p style="color:var(--danger);padding:2rem;text-align:center">Not authenticated. Please sign in again.</p>';
-    return;
-  }
+  // Cancel previous listener if any
+  if(paymentsUnsubscribe){ paymentsUnsubscribe(); paymentsUnsubscribe=null; }
 
-  let players = [];
-  try {
-    const snap = await db.collection('players').get();
-    players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  } catch(e) {
-    el.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Firebase error: ${e.message}<br><small>${e.code||''}</small></p>`;
-    return;
-  }
+  paymentsUnsubscribe = db.collection('players').onSnapshot(snap => {
+    const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    if(!players.length){
+      document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found. Add players first.</p>';
+      return;
+    }
+    buildPaymentsUI(players);
+  }, err => {
+    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Error: ${err.message}</p>`;
+  });
+}
 
-  if(!players.length){
-    el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found in Firebase. Add players first.</p>';
-    return;
-  }
+function buildPaymentsUI(players){
+  const el = document.getElementById('main-area');
+  if(!el) return;
 
   const price  = p => (p.price || (p.group==='advanced'?250:78));
   const due    = p => (p.inBloc1?price(p):0)+(p.inBloc2?price(p):0);
