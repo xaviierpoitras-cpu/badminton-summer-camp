@@ -345,7 +345,15 @@ function logout(){
 }
 
 // ── RENDER ──────────────────────────────────────
-function renderAll(){renderNav();renderGrid();renderSide();}
+let page = 'public';
+function setPage(p){ page=p; renderAll(); }
+function renderAll(){ renderNav(); renderMain(); renderSide(); }
+function renderMain(){
+  if(page==='public') renderGrid();
+  else if(page==='myres') renderMyReservations();
+  else if(page==='roster') renderRoster();
+  else if(page==='admin') renderAdmin();
+}
 function initials(n){return n.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();}
 
 function renderNav(){
@@ -354,6 +362,12 @@ function renderNav(){
     html+=`<div class="user-pill"><div class="user-av">${initials(currentUser.name)}</div>${currentUser.name}</div>`;
   if(isAdmin)
     html+=`<span style="background:rgba(255,255,255,.2);color:#fff;font-size:12px;padding:5px 10px;border-radius:20px;font-weight:500">⚙️ Admin</span>`;
+  if(!isAdmin){
+    html+=`<button class="hbtn${page==='public'?' active':''}" onclick="setPage('public')">Spots</button>`;
+    html+=`<button class="hbtn${page==='myres'?' active':''}" onclick="setPage('myres')">My Reservations</button>`;
+  }
+  if(isAdmin)
+    html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Admin</button>`;
   html+=`<button class="hbtn" onclick="logout()">Sign out</button>`;
   document.getElementById('nav-btns').innerHTML=html;
 }
@@ -503,6 +517,64 @@ async function loadAdminPlayers(){
     html+=`</div></div>`;
     panel.outerHTML=html;
   } catch(e){ panel.innerHTML=`<div class="panel" id="player-panel"><h3>👥 Players</h3><p style="color:var(--danger);font-size:13px">Error loading players.</p></div>`; }
+}
+
+function renderMyReservations(){
+  const mySpots = Object.entries(spots).filter(([k,s]) => s.reservedBy === currentUser.name);
+  let html = '';
+
+  if(!mySpots.length){
+    html += `<div style="text-align:center;padding:3rem 1rem">
+      <div style="font-size:48px;margin-bottom:1rem">🏸</div>
+      <p style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:8px">No reservations yet</p>
+      <p style="font-size:14px;color:var(--text2)">Go to <strong>Spots</strong> to reserve an available practice slot.</p>
+    </div>`;
+  } else {
+    html += `<div style="margin-bottom:1.25rem">
+      <h2 style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">My Reservations</h2>
+      <p style="font-size:13px;color:var(--text2)">${mySpots.length} spot${mySpots.length!==1?'s':''} reserved</p>
+    </div>`;
+
+    // Info box
+    html += `<div style="background:var(--accent-bg);border:1px solid #b6d9c4;border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem">
+      <p style="font-size:13px;color:var(--accent-text);margin-bottom:4px">📧 <strong>E-transfer to:</strong> ${ETRANSFER_EMAIL}</p>
+      <p style="font-size:12px;color:var(--accent-text)">Send payment after each reservation to confirm your spot.</p>
+    </div>`;
+
+    // Group by date
+    const byDate = {};
+    mySpots.forEach(([k,s]) => {
+      if(!byDate[s.dateId]) byDate[s.dateId] = [];
+      byDate[s.dateId].push([k,s]);
+    });
+
+    Object.entries(byDate).sort(([a],[b])=>a.localeCompare(b)).forEach(([dateId, entries]) => {
+      entries.forEach(([key,s]) => {
+        const g = GROUPS[s.group];
+        const isPaid = !!s.paid;
+        html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span class="gbadge ${g.badge}">${g.label}</span>
+                <span style="font-size:15px;font-weight:600;color:var(--text)">${s.dateLabel}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-size:13px;font-family:'DM Mono',monospace;font-weight:600;color:var(--accent-text)">$${g.price}</span>
+                ${isPaid
+                  ? `<span style="background:#DCFCE7;color:#166534;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid #86EFAC">✅ Payment confirmed</span>`
+                  : `<span style="background:#FEF9C3;color:#854D0E;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid #FDE047">⏳ Payment pending</span>`}
+              </div>
+            </div>
+            <button class="btn-cancel" style="font-size:13px;padding:7px 14px;color:var(--danger);border-color:var(--danger)" 
+              onclick="cancelReservation('${key}')">Cancel</button>
+          </div>
+        </div>`;
+      });
+    });
+  }
+
+  document.getElementById('main-area').innerHTML = html;
 }
 
 function renderSide(){
