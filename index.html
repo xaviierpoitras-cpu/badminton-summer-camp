@@ -175,7 +175,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
            alt="Badminton Excellence" 
            style="height:44px;width:auto;border-radius:6px"/>
       <div>
-        <p style="font-size:11px;opacity:.7;font-family:'DM Mono',monospace;margin-top:2px">July 6 – August 14, 2026 · Spot Exchange</p>
+        <p style="font-size:11px;opacity:.7;font-family:'DM Mono',monospace;margin-top:2px">July 6 – August 14, 2026 · Available Spots</p>
       </div>
     </div>
     <div class="header-right" id="nav-btns"></div>
@@ -326,6 +326,7 @@ async function adminLogin(){
 }
 
 function enterApp(){
+  page = isAdmin ? 'admin' : 'public';
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('loading-msg').style.display='none';
@@ -335,7 +336,7 @@ function enterApp(){
 
 function logout(){
   auth.signOut();
-  currentUser=null;isAdmin=false;
+  currentUser=null;isAdmin=false;page='public';
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('admin-fields').style.display='none';
