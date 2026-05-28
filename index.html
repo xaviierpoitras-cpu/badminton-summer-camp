@@ -418,8 +418,55 @@ function renderGrid(){
 
 function renderAdmin(){
   let html = `<div class="admin-banner">🔐 Administrator mode</div>` + renderAdminPanel();
+  html += renderAdminWeekGrid();
+  html += `<div id="player-panel-placeholder"></div>`;
   document.getElementById('main-area').innerHTML = html;
   setTimeout(loadAdminPlayers, 100);
+}
+
+function renderAdminWeekGrid(){
+  const thColors={adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
+  let html=`<div class="panel"><h3 style="margin-bottom:12px">📅 Weekly Reservations</h3>`;
+
+  SCHEDULE.forEach(({week,days})=>{
+    html+=`<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">Week ${week}</div>
+      <table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:12px">
+        <thead><tr>
+          <th style="padding:7px 10px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;color:var(--text2);min-width:90px">Date</th>
+          ${Object.entries(GROUPS).map(([g,info])=>`<th style="padding:7px 10px;text-align:center;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;color:${thColors[g]}">${info.label}</th>`).join('')}
+        </tr></thead>
+        <tbody>`;
+
+    days.forEach(day=>{
+      html+=`<tr>
+        <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500;color:var(--text);white-space:nowrap">${day.label}</td>`;
+      Object.keys(GROUPS).forEach(grp=>{
+        if(!day.groups.includes(grp)){
+          html+=`<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--border)">—</td>`;
+          return;
+        }
+        const entries=getSpotsFor(day.id,grp);
+        if(!entries.length){
+          html+=`<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--text3)">–</td>`;
+          return;
+        }
+        let cellContent=entries.map(([key,s])=>{
+          const isRes=!!s.reservedBy;
+          const isPaid=!!s.paid;
+          return `<div style="margin:2px 0;padding:3px 6px;border-radius:6px;background:${isRes?(isPaid?'#DCFCE7':'#FFF7ED'):'#EFF6FF'};border:1px solid ${isRes?(isPaid?'#86EFAC':'#FED7AA'):'#BFDBFE'}">
+            <div style="font-weight:600;color:${isRes?(isPaid?'#166534':'#C2410C'):'#1E40AF'};font-size:11px">${isRes?s.reservedBy:'Available'}</div>
+            ${isRes?`<div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${isPaid?'✅ paid':'⏳ unpaid'} · ID:${key.slice(-4)}</div>`:''}
+          </div>`;
+        }).join('');
+        html+=`<td style="padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top">${cellContent}</td>`;
+      });
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  });
+  html+=`</div>`;
+  return html;
 }
 
 function renderAdminPanel(){
@@ -482,6 +529,8 @@ function renderAdminPlayers(){
 }
 
 async function loadAdminPlayers(){
+  const placeholder=document.getElementById('player-panel-placeholder');
+  if(placeholder) placeholder.innerHTML='<div class="panel" id="player-panel"><h3>👥 Players</h3><p style="font-size:13px;color:var(--text3)">Loading...</p></div>';
   const panel=document.getElementById('player-panel');
   if(!panel) return;
   try{
