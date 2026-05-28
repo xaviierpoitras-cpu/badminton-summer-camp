@@ -360,8 +360,15 @@ function initials(n){return n.split(' ').map(w=>w[0]||'').join('').substring(0,2
 
 function renderNav(){
   let html='';
-  if(currentUser&&!currentUser.isAdmin)
-    html+=`<div class="user-pill"><div class="user-av">${initials(currentUser.name)}</div>${currentUser.name}</div>`;
+  if(currentUser&&!currentUser.isAdmin){
+    const grpLabel = currentUser.group==='advanced' ? 'Avancé' : 'Intermédiaire';
+    const grpColor = currentUser.group==='advanced' ? '#2D5A3D' : '#6D28D9';
+    html+=`<div class="user-pill">
+      <div class="user-av">${initials(currentUser.name)}</div>
+      ${currentUser.name}
+      <span style="background:rgba(255,255,255,.2);font-size:10px;padding:2px 7px;border-radius:20px;margin-left:2px;opacity:.9">${grpLabel}</span>
+    </div>`;
+  }
   if(isAdmin)
     html+=`<span style="background:rgba(255,255,255,.2);color:#fff;font-size:12px;padding:5px 10px;border-radius:20px;font-weight:500">⚙️ Admin</span>`;
   if(!isAdmin){
