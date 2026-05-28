@@ -117,8 +117,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .admin-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px}
 .admin-row-info{font-size:13px;color:var(--text)}
 .admin-row-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.seed-btn{padding:8px 14px;border-radius:var(--radius);border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
-.seed-btn:hover{opacity:.85}
 
 /* MODALS */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
@@ -214,63 +212,6 @@ const firebaseConfig = {
   appId: "1:971453241514:web:8eea66df874cb04b34d8d3"
 };
 
-// Initial player data — used only for first-time seeding to Firebase
-const SEED_PLAYERS = {
-  advanced: [
-    {name:"Zhengyang Xiao",email:"kathy.xu0218@gmail.com",pin:"4242"},
-    {name:"Thomas Gosselin",email:"waldor12@gmail.com",pin:"6091"},
-    {name:"Xihan Duan",email:"xihanduan@hotmail.com",pin:"4335"},
-    {name:"Amir Lavansani",email:"a_r_lavasani@yahoo.com",pin:"4059"},
-    {name:"Rémi Watelet",email:"remiwatelet@gmail.com",pin:"3793"},
-    {name:"Victor Hua",email:"vichwa010@gmail.com",pin:"2011"},
-    {name:"Mariella Boucher",email:"mariellaboucher@icloud.com",pin:"7223"},
-    {name:"Loic Grégoire",email:"sauriol.marguerite@gmail.com",pin:"8748"},
-    {name:"Estelle Beaudoin",email:"estelle_beaudoin@hotmail.com",pin:"2215"},
-    {name:"Miguel Dorais",email:"migueldorais888@gmail.com",pin:"2331"},
-    {name:"Félix Adib",email:"alainadib@yahoo.ca",pin:"6135"},
-    {name:"Daniel Chen",email:"daniel_chenn@icloud.com",pin:"7867"},
-    {name:"Thoma Lussier",email:"puce54@hotmail.com",pin:"8124"},
-    {name:"Tony Samaha",email:"delsayegh@gmail.com",pin:"9735"},
-    {name:"Emerie Souchen",email:"fiona.boey@videotron.ca",pin:"2435"},
-    {name:"Laurier Drolet",email:"ariane.2255@gmail.com",pin:"4177"},
-    {name:"Laurier Charron",email:"fannie.olivier@gmail.com",pin:"2542"},
-    {name:"Alexandre Bidal",email:"rcbidal@gmail.com",pin:"1197"},
-    {name:"Sophie Que",email:"nipeihong88@hotmail.com",pin:"3820"},
-    {name:"Kali Malette Godbout",email:"natachagodbout@hotmail.com",pin:"1469"},
-    {name:"Jack Li",email:"pinggong61@hotmail.com",pin:"6840"},
-    {name:"Félix Beauchamps",email:"felix.a.beauchamp@icloud.com",pin:"9032"},
-    {name:"Chloé Barrette",email:"julie.poulin@hotmail.com",pin:"4565"},
-    {name:"Ethan Pei",email:"ethan.pei@hotmail.com",pin:"0167"},
-    {name:"Florence Bigras",email:"Limonade_99@hotmail.com",pin:"8804"},
-    {name:"Xavier Barrette",email:"julie.poulin@hotmail.com",pin:"6548"},
-    {name:"Madeleine Simard",email:"siamrdpascal@hottmail.com",pin:"1721"},
-    {name:"Joey Li",email:"mechliy@gmail.com",pin:"0723"},
-    {name:"Noah Grenier",email:"markgrenier@hotmail.com",pin:"3858"},
-    {name:"Rémi Joncas",email:"Familyzephyr@gmail.com",pin:"0037"},
-    {name:"Mia Wang",email:"xingjiaona@gmail.com",pin:"5360"},
-  ],
-  intermediate: [
-    {name:"Sofia Rawji",email:"nafissai@hotmail.com",pin:"3492"},
-    {name:"Anthony Su",email:"anthonysu836@gmail.com",pin:"1392"},
-    {name:"Grace Mc Nicholl",email:"davidcarle0@gmail.com",pin:"5782"},
-    {name:"Emiliano Restrepo",email:"Paorpe@gmail.com",pin:"4500"},
-    {name:"Emma Chen",email:"jackchenyan@hotmail.com",pin:"6551"},
-    {name:"Aiqi Tan",email:"yina.wang0210@gmail.com",pin:"1546"},
-    {name:"Andréa Leva",email:"ionut0305@gmail.com",pin:"6591"},
-    {name:"Israelle Epie Bih",email:"fulemm@yahoo.com",pin:"2353"},
-    {name:"Anne Hu",email:"hdk1112@hotmail.com",pin:"3728"},
-    {name:"Kaël Lesage-Papineau",email:"lysannelesage@hotmail.com",pin:"6426"},
-    {name:"Justin Larocque",email:"andrelarocque@gmail.com",pin:"8851"},
-    {name:"Lindan Chen",email:"lindanchen01@gmail.com",pin:"2731"},
-    {name:"Yufei Lin",email:"miaoxian0124@gmail.com",pin:"3205"},
-    {name:"Joey Samaha",email:"delsayegh@gmail.com",pin:"1789"},
-    {name:"Gabrielle Michel",email:"mamanpapaetmoi@icloud.com",pin:"3796"},
-    {name:"Teresa Hou",email:"lucydai2011@gmail.com",pin:"0921"},
-    {name:"Damien Gourde Bureau",email:"Chan_gb_05@hotnail.com",pin:"1511"},
-    {name:"Antoine Champagne",email:"locatelli.champagne@gmail.com",pin:"5073"},
-    {name:"Maxime Brennan",email:"Genevieve.labreche@gmail.com",pin:"2822"},
-  ]
-};
 // ═══════════════════════════════════════════════
 
 const GROUPS = {
@@ -528,7 +469,7 @@ async function loadAdminPlayers(){
     let html=`<div class="panel" id="player-panel">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <h3>👥 Players (${players.length})</h3>
-        <button class="seed-btn" onclick="seedPlayers()" title="Upload initial player list to Firebase">Seed initial players</button>
+        
       </div>
       <div class="form-row">
         <div class="form-group"><label>Name</label><input id="new-name" placeholder="Full name"/></div>
@@ -548,7 +489,7 @@ async function loadAdminPlayers(){
       </div>
       <button class="btn-green" onclick="addPlayer()">Add player</button>
       <div style="margin-top:14px">`;
-    if(!players.length){html+=`<p style="font-size:13px;color:var(--text3);font-style:italic">No players yet. Click "Seed initial players" to upload.</p>`;}
+    if(!players.length){html+=`<p style="font-size:13px;color:var(--text3);font-style:italic">No players yet. Add players using the form above.</p>`;}
     else{ players.forEach(p=>{
       html+=`<div class="admin-row">
         <div><div class="admin-row-info">${p.name} <span style="font-size:11px;color:var(--text3)">(${p.group})</span> <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:2px 8px;border-radius:20px">${p.pin||'—'}</span></div>
@@ -682,21 +623,7 @@ async function removePlayer(id){
   loadAdminPlayers();
 }
 
-async function seedPlayers(){
-  if(!confirm(`Upload ${SEED_PLAYERS.advanced.length + SEED_PLAYERS.intermediate.length} players to Firebase? Only do this once.`))return;
-  const allPlayers=[
-    ...SEED_PLAYERS.advanced.map(p=>({...p,group:'advanced'})),
-    ...SEED_PLAYERS.intermediate.map(p=>({...p,group:'intermediate'}))
-  ];
-  let count=0;
-  for(const p of allPlayers){
-    const pinHash=await sha256(p.pin);
-    await db.collection('players').add({name:p.name,email:p.email,pin:p.pin,pinHash,group:p.group});
-    count++;
-  }
-  alert(`✅ ${count} players uploaded to Firebase.`);
-  loadAdminPlayers();
-}
+
 
 async function togglePaid(key){
   if(!spots[key]) return;
