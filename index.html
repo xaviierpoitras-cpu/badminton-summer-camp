@@ -761,7 +761,6 @@ function buildPaymentsUI(players){
   } else {
     filtered.forEach(p=>{
       const b1paid=!!p.bloc1Paid, b2paid=!!p.bloc2Paid, b1email=!!p.bloc1EmailSent, b2email=!!p.bloc2EmailSent;
-      const b1email=!!p.bloc1EmailSent, b2email=!!p.bloc2EmailSent;
       const pDue=due(p), pPaid=paid(p), pBal=bal(p);
       const fullyPaid = pBal===0&&pDue>0;
 
