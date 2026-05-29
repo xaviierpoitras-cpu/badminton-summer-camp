@@ -446,8 +446,8 @@ function renderGrid(){
 
 function renderAdmin(){
   let html = `<div class="admin-banner">🔐 Administrator mode</div>`;
-  html += renderAdminWeekGrid();
   html += renderAdminPanel();
+  html += renderAdminWeekGrid();
   html += `<div id="player-panel-placeholder"></div>`;
   document.getElementById('main-area').innerHTML = html;
   setTimeout(loadAdminPlayers, 100);
@@ -995,7 +995,15 @@ async function cancelReservation(key){
 }
 
 // ── PLAYER ADMIN ────────────────────────────────
+async function generateLatePin(){
+  await generatePinForField("late-pin");
+}
+
 async function generatePin(){
+  await generatePinForField("new-pin");
+}
+
+async function generatePinForField(fieldId){
   // Fetch all existing PINs from Firebase
   const snap = await db.collection('players').get();
   const usedPins = new Set(snap.docs.map(d => d.data().pin).filter(Boolean));
@@ -1003,10 +1011,10 @@ async function generatePin(){
   do {
     pin = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
   } while (usedPins.has(pin));
-  document.getElementById('new-pin').value = pin;
-  document.getElementById('new-pin').style.background = 'var(--warn-bg)';
-  document.getElementById('new-pin').style.fontWeight = '600';
-  document.getElementById('new-pin').style.color = 'var(--warn)';
+  document.getElementById(fieldId).value = pin;
+  document.getElementById(fieldId).style.background = 'var(--warn-bg)';
+  document.getElementById(fieldId).style.fontWeight = '600';
+  document.getElementById(fieldId).style.color = 'var(--warn)';
 }
 
 async function addPlayer(){
@@ -1136,5 +1144,69 @@ function closeModal(id){document.getElementById(id).style.display='none';}
 // Focus first PIN digit on load
 document.getElementById('p0').focus();
 </script>
+
+<!-- Modal: edit player enrollment -->
+<div id="modal-edit-player" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-edit-player')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Edit enrollment</h3>
+      <p class="modal-sub" id="edit-player-name" style="font-weight:500;color:var(--text)"></p>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px">Sub-group</label>
+      <select id="edit-subgroup" style="width:100%;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+        <option>Avancé 1</option>
+        <option>Avancé 2</option>
+        <option>Intermédiaire 1</option>
+        <option>Intermédiaire 2</option>
+      </select>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-top:14px;margin-bottom:8px">Bloc enrollment</label>
+      <div style="display:flex;gap:20px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="edit-bloc1" style="width:16px;height:16px"/> Bloc 1</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="edit-bloc2" style="width:16px;height:16px"/> Bloc 2</label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-edit-player')">Cancel</button>
+        <button class="btn-primary" onclick="saveEditPlayer()">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: late registration -->
+<div id="modal-late-player" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-late-player')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Late registration</h3>
+      <p class="modal-sub">Add a player who registers after the camp starts.</p>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px">Full name</label>
+      <input id="late-name" placeholder="ex: Marie Tremblay" autocomplete="name" style="width:100%;font-size:14px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;outline:none"/>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px">Email</label>
+      <input id="late-email" type="email" placeholder="parent@email.com" style="width:100%;font-size:14px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;outline:none"/>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px">Group</label>
+      <select id="late-group" onchange="updateLateSubgroups()" style="width:100%;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+        <option value="advanced">Advanced</option>
+        <option value="intermediate">Intermediate</option>
+      </select>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-top:12px;margin-bottom:4px">Sub-group</label>
+      <select id="late-subgroup" style="width:100%;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+        <option>Avancé 1</option><option>Avancé 2</option>
+      </select>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-top:14px;margin-bottom:8px">Bloc enrollment</label>
+      <div style="display:flex;gap:20px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="late-bloc1" checked style="width:16px;height:16px"/> Bloc 1</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="late-bloc2" style="width:16px;height:16px"/> Bloc 2</label>
+      </div>
+      <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:4px">PIN (4 digits)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="late-pin" placeholder="Auto-generated" maxlength="4" type="tel" style="flex:1;font-size:14px;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;outline:none" readonly/>
+        <button onclick="generateLatePin()" style="padding:9px 12px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Generate →</button>
+      </div>
+      <p id="late-error" style="font-size:12px;color:var(--danger);margin-top:6px;display:none">Please fill all fields and generate a PIN.</p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal('modal-late-player')">Cancel</button>
+        <button class="btn-primary" onclick="submitLatePlayer()">Add player</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
