@@ -526,7 +526,10 @@ function renderGrid(){
             <div style="font-size:10px;color:var(--text3)">Full</div>
           </td>`;
         } else {
-          html+=`<td style="padding:8px 6px;border-bottom:1px solid var(--border);text-align:center;color:var(--text3);font-size:13px">–</td>`;
+          html+=`<td style="padding:8px 6px;border-bottom:1px solid var(--border);text-align:center">
+            <div style="width:30px;height:30px;border-radius:50%;background:#F3F4F6;border:2px solid #D1D5DB;margin:0 auto 3px;opacity:.5"></div>
+            <div style="font-size:10px;color:var(--text3)">Full</div>
+          </td>`;
         }
       });
       html += `</tr>`;
