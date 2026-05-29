@@ -691,14 +691,21 @@ function renderPayments(){
   if(paymentsUnsubscribe){ paymentsUnsubscribe(); paymentsUnsubscribe=null; }
 
   paymentsUnsubscribe = db.collection('players').onSnapshot(snap => {
-    const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-    if(!players.length){
-      document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found. Add players first.</p>';
-      return;
+    try {
+      const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      if(!players.length){
+        document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found. Add players first.</p>';
+        return;
+      }
+      console.log('Players loaded:', players.length);
+      buildPaymentsUI(players);
+    } catch(e) {
+      console.error('buildPaymentsUI error:', e);
+      document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">JS Error: ${e.message}<br><small>${e.stack}</small></p>`;
     }
-    buildPaymentsUI(players);
   }, err => {
-    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Error: ${err.message}</p>`;
+    console.error('Firestore error:', err);
+    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Firestore Error: ${err.message}</p>`;
   });
 }
 
