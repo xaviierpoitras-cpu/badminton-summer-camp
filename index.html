@@ -385,6 +385,7 @@ function renderNav(){
     html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Admin</button>`;
     html+=`<button class="hbtn${page==='payments'?' active':''}" onclick="setPage('payments')">💳 Payments</button>`;
   }
+  html+=`<a href="guide.html" target="_blank" class="hbtn" style="text-decoration:none">📖 Guide</a>`;
   html+=`<button class="hbtn" onclick="logout()">Sign out</button>`;
   document.getElementById('nav-btns').innerHTML=html;
 }
