@@ -445,8 +445,9 @@ function renderGrid(){
 }
 
 function renderAdmin(){
-  let html = `<div class="admin-banner">🔐 Administrator mode</div>` + renderAdminPanel();
+  let html = `<div class="admin-banner">🔐 Administrator mode</div>`;
   html += renderAdminWeekGrid();
+  html += renderAdminPanel();
   html += `<div id="player-panel-placeholder"></div>`;
   document.getElementById('main-area').innerHTML = html;
   setTimeout(loadAdminPlayers, 100);
@@ -1072,7 +1073,7 @@ async function togglePaid(key){
 let editPlayerId = null;
 
 function openEditPlayer(id){
-  const p = window._paymentPlayers?.find(p=>p.id===id);
+  const p = (window._paymentPlayers||[]).find(function(pl){return pl.id===id;});
   if(!p) return;
   editPlayerId = id;
   document.getElementById('edit-player-name').textContent = p.name + ' · ' + (p.email||'');
