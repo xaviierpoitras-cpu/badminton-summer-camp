@@ -378,8 +378,7 @@ function renderNav(){
   if(isAdmin)
     html+=`<span style="background:rgba(255,255,255,.2);color:#fff;font-size:12px;padding:5px 10px;border-radius:20px;font-weight:500">⚙️ Admin</span>`;
   if(!isAdmin){
-    html+=`<button class="hbtn${page==='public'?' active':''}" onclick="setPage('public')">Spots</button>`;
-    html+=`<button class="hbtn${page==='myres'?' active':''}" onclick="setPage('myres')">My Reservations</button>`;
+    html+=`<button class="hbtn active">Spots</button>`;
   }
   if(isAdmin){
     html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Admin</button>`;
@@ -406,96 +405,130 @@ function getSpotsFor(dateId,grp){
 }
 
 function renderGrid(){
-  let html='';
-  html+=`<div class="legend">
-    <span style="font-size:12px;font-weight:500;color:var(--text2)">Legend:</span>
-    <div class="legend-item"><div class="dot dot-avail"></div>Available</div>
-    <div class="legend-item"><div class="dot dot-reserved"></div>Reserved</div>
+  const el = document.getElementById('main-area');
+
+  // Which groups can this player see?
+  const playerGroups = isAdmin ? Object.keys(GROUPS)
+    : currentUser.group === 'advanced' ? ['adv1','adv2'] : ['int1','int2'];
+
+  const thColors = {adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
+
+  // helper: does this player have a reservation on this date/group?
+  function myReservation(dateId, grp){
+    return Object.entries(spots).find(([k,s])=>s.dateId===dateId&&s.group===grp&&s.reservedBy===currentUser.name);
+  }
+  function hasAvail(dateId, grp){
+    return Object.values(spots).some(s=>s.dateId===dateId&&s.group===grp&&!s.reservedBy);
+  }
+  function hasAny(dateId, grp){
+    return Object.values(spots).some(s=>s.dateId===dateId&&s.group===grp);
+  }
+
+  let html = '';
+
+  // ── MY RESERVATIONS (inline above calendar) ────────────────────────────
+  if(!isAdmin){
+    const mySpots = Object.entries(spots)
+      .filter(([k,s])=>s.reservedBy===currentUser.name)
+      .sort(([,a],[,b])=>(a.dateId||'').localeCompare(b.dateId||''));
+
+    if(mySpots.length){
+      html += `<div style="margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <h3 style="font-size:15px;font-weight:600;color:var(--text)">My Reservations <span style="font-size:13px;font-weight:400;color:var(--text2)">(${mySpots.length})</span></h3>
+        </div>
+        <div style="background:var(--accent-bg);border:1px solid #b6d9c4;border-radius:var(--radius);padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--accent-text)">
+          📧 E-transfer: <strong>${ETRANSFER_EMAIL}</strong> — send payment to confirm your spot.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">`;
+      mySpots.forEach(([key,s])=>{
+        const g = GROUPS[s.group];
+        const isPaid = !!s.paid;
+        html+=`<div style="background:var(--surface);border:1px solid ${isPaid?'#86EFAC':'var(--border)'};border-left:3px solid ${isPaid?'#16a34a':'var(--warn)'};border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="gbadge ${g.badge}">${g.label}</span>
+            <span style="font-size:14px;font-weight:500;color:var(--text)">${s.dateLabel}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--accent-text)">$${g.price}</span>
+            ${isPaid
+              ? `<span style="background:#DCFCE7;color:#166534;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid #86EFAC">✅ Confirmed</span>`
+              : `<span style="background:#FEF9C3;color:#854D0E;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;border:1px solid #FDE047">⏳ Pending</span>`}
+          </div>
+          <button style="padding:5px 12px;border-radius:var(--radius);font-size:12px;border:1px solid #fca5a5;background:transparent;color:var(--danger);cursor:pointer;font-family:'DM Sans',sans-serif" onclick="cancelReservation('${key}')">Cancel</button>
+        </div>`;
+      });
+      html += `</div></div><hr style="border:none;border-top:1px solid var(--border);margin-bottom:1.5rem"/>`;
+    }
+  }
+
+  // ── CALENDAR GRID: dates = columns, groups = rows ──────────────────────
+  SCHEDULE.forEach(({week, days})=>{
+    html += `<div style="margin-bottom:1.25rem">
+      <div style="font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">— Week ${week} &nbsp;·&nbsp; ${days[0].label} – ${days[3].label}</div>
+      <table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+        <thead>
+          <tr>
+            <th style="padding:9px 14px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);min-width:110px">Group</th>
+            ${days.map(d=>`<th style="padding:9px 10px;text-align:center;background:var(--surface2);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text)">${d.label}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>`;
+
+    playerGroups.forEach((grp,gi)=>{
+      const g = GROUPS[grp];
+      html += `<tr style="${gi%2===1?'background:var(--surface2)':''}">
+        <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:500">
+          <span class="gbadge ${g.badge}">${g.label}</span>
+        </td>`;
+      days.forEach(day=>{
+        if(!day.groups.includes(grp)){
+          html+=`<td style="padding:10px;border-bottom:1px solid var(--border);text-align:center;color:var(--border);font-size:18px">—</td>`;
+          return;
+        }
+        const myRes = myReservation(day.id, grp);
+        const avail = hasAvail(day.id, grp);
+        const any   = hasAny(day.id, grp);
+
+        if(myRes){
+          // Player has a reservation here
+          html+=`<td style="padding:10px;border-bottom:1px solid var(--border);text-align:center">
+            <div style="cursor:pointer" onclick="showCellModal('${day.id}','${grp}','${day.label}')">
+              <div style="width:28px;height:28px;border-radius:50%;background:#FFF7ED;border:2px solid #F59E0B;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:14px">🏸</div>
+              <div style="font-size:10px;color:#C2410C;font-weight:500">Yours</div>
+            </div>
+          </td>`;
+        } else if(avail){
+          html+=`<td style="padding:10px;border-bottom:1px solid var(--border);text-align:center">
+            <div style="cursor:pointer" onclick="showCellModal('${day.id}','${grp}','${day.label}')">
+              <div style="width:28px;height:28px;border-radius:50%;background:#DCFCE7;border:2px solid #22c55e;margin:0 auto 3px;box-shadow:0 0 0 4px rgba(34,197,94,.15)"></div>
+              <div style="font-size:10px;color:#16a34a;font-weight:500">Available</div>
+            </div>
+          </td>`;
+        } else if(any){
+          html+=`<td style="padding:10px;border-bottom:1px solid var(--border);text-align:center">
+            <div style="width:28px;height:28px;border-radius:50%;background:#F3F4F6;border:2px solid #D1D5DB;margin:0 auto 3px;opacity:.6"></div>
+            <div style="font-size:10px;color:var(--text3)">Full</div>
+          </td>`;
+        } else {
+          html+=`<td style="padding:10px;border-bottom:1px solid var(--border);text-align:center;color:var(--text3);font-size:12px">–</td>`;
+        }
+      });
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  });
+
+  // Legend
+  html += `<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-top:4px;padding-top:10px;border-top:1px solid var(--border)">
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:50%;background:#DCFCE7;border:2px solid #22c55e;display:inline-block"></span>Available</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:50%;background:#FFF7ED;border:2px solid #F59E0B;display:inline-block;font-size:9px;line-height:14px;text-align:center">🏸</span>Your spot</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:50%;background:#F3F4F6;border:2px solid #D1D5DB;display:inline-block;opacity:.6"></span>Full</span>
+    <span style="display:flex;align-items:center;gap:6px"><span style="color:var(--border);font-size:16px;line-height:14px">—</span>No practice</span>
   </div>`;
 
-  const thColors={adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
-
-  SCHEDULE.forEach(({week,days})=>{
-    html+=`<div class="week-block">
-      <div class="week-title">Week ${week} &nbsp;·&nbsp; ${days[0].label} – ${days[3].label}</div>
-      <table class="grid-table">
-        <thead><tr><th>Date</th>
-          ${Object.entries(GROUPS).map(([g,info])=>`<th style="color:${thColors[g]}">${info.label}<br><span style="font-size:10px;font-weight:400;opacity:.7">${info.weeks}</span></th>`).join('')}
-        </tr></thead>
-        <tbody>`;
-    days.forEach(day=>{
-      html+=`<tr><td>${day.label}</td>`;
-      Object.keys(GROUPS).forEach(grp=>{
-        if(!day.groups.includes(grp)){html+=`<td style="color:var(--border);font-size:16px">—</td>`;return;}
-        const entries=getSpotsFor(day.id,grp);
-        if(!entries.length){html+=`<td><span style="font-size:11px;color:var(--text3)">–</span></td>`;return;}
-        const avail=entries.filter(([k,s])=>!s.reservedBy).length;
-        const res=entries.filter(([k,s])=>s.reservedBy).length;
-        html+=`<td><div class="cell-btn" onclick="showCellModal('${day.id}','${grp}','${day.label}')">
-          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">
-            ${entries.map(([k,s])=>`<div class="spot-dot ${s.reservedBy?'reserved':'avail'}"></div>`).join('')}
-          </div>
-          <div class="cell-count">${avail?avail+' avail':''}${avail&&res?' · ':''}${res?res+' res.':''}</div>
-        </div></td>`;
-      });
-      html+=`</tr>`;
-    });
-    html+=`</tbody></table></div>`;
-  });
-  document.getElementById('main-area').innerHTML=html;
+  el.innerHTML = html;
 }
 
-function renderAdmin(){
-  let html = `<div class="admin-banner">🔐 Administrator mode</div>`;
-  html += renderAdminPanel();
-  html += renderAdminWeekGrid();
-  document.getElementById('main-area').innerHTML = html;
-}
-
-function renderAdminWeekGrid(){
-  const thColors={adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
-  let html=`<div class="panel"><h3 style="margin-bottom:12px">📅 Weekly Reservations</h3>`;
-
-  SCHEDULE.forEach(({week,days})=>{
-    html+=`<div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">Week ${week}</div>
-      <table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:12px">
-        <thead><tr>
-          <th style="padding:7px 10px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;color:var(--text2);min-width:90px">Date</th>
-          ${Object.entries(GROUPS).map(([g,info])=>`<th style="padding:7px 10px;text-align:center;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;color:${thColors[g]}">${info.label}</th>`).join('')}
-        </tr></thead>
-        <tbody>`;
-
-    days.forEach(day=>{
-      html+=`<tr>
-        <td style="padding:7px 10px;border-bottom:1px solid var(--border);font-weight:500;color:var(--text);white-space:nowrap">${day.label}</td>`;
-      Object.keys(GROUPS).forEach(grp=>{
-        if(!day.groups.includes(grp)){
-          html+=`<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--border)">—</td>`;
-          return;
-        }
-        const entries=getSpotsFor(day.id,grp);
-        if(!entries.length){
-          html+=`<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--text3)">–</td>`;
-          return;
-        }
-        let cellContent=entries.map(([key,s])=>{
-          const isRes=!!s.reservedBy;
-          const isPaid=!!s.paid;
-          return `<div style="margin:2px 0;padding:3px 6px;border-radius:6px;background:${isRes?(isPaid?'#DCFCE7':'#FFF7ED'):'#EFF6FF'};border:1px solid ${isRes?(isPaid?'#86EFAC':'#FED7AA'):'#BFDBFE'}">
-            <div style="font-weight:600;color:${isRes?(isPaid?'#166534':'#C2410C'):'#1E40AF'};font-size:11px">${isRes?s.reservedBy:'Available'}</div>
-            ${isRes?`<div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${isPaid?'✅ paid':'⏳ unpaid'} · ID:${key.slice(-4)}</div>`:''}
-          </div>`;
-        }).join('');
-        html+=`<td style="padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top">${cellContent}</td>`;
-      });
-      html+=`</tr>`;
-    });
-    html+=`</tbody></table></div>`;
-  });
-  html+=`</div>`;
-  return html;
-}
 
 function renderAdminPanel(){
   // Build date+group options
