@@ -747,7 +747,7 @@ function buildPaymentsUI(players){
     <div class="stat"><div class="stat-label">Collected</div><div class="stat-value" style="font-size:18px;color:var(--accent)">$${allPaid.toLocaleString()}</div></div>
     <div class="stat"><div class="stat-label">Outstanding</div><div class="stat-value" style="font-size:18px;color:var(--danger)">$${(allDue-allPaid).toLocaleString()}</div></div>
     <div class="stat"><div class="stat-label">Fully paid</div><div class="stat-value" style="font-size:18px">${paidFull}/${players.length}</div></div>
-    <div class="stat"><div class="stat-label">Emails sent</div><div class="stat-value" style="font-size:14px;margin-top:2px">B1 ${b1Email}/${b1Total}<br>B2 ${b2Email}/${b2Total}</div></div>
+    <div class="stat"><div class="stat-label">Emails sent</div><div class="stat-value" style="font-size:18px">${emailSent}/${players.length}</div></div>
   </div>
 
   <div class="group-tabs" style="margin-bottom:1.25rem">
@@ -760,7 +760,7 @@ function buildPaymentsUI(players){
     html+=`<div style="text-align:center;padding:3rem;color:var(--text3);font-size:14px">No players match this filter.</div>`;
   } else {
     filtered.forEach(p=>{
-      const b1paid=!!p.bloc1Paid, b2paid=!!p.bloc2Paid;
+      const b1paid=!!p.bloc1Paid, b2paid=!!p.bloc2Paid, b1email=!!p.bloc1EmailSent, b2email=!!p.bloc2EmailSent;
       const b1email=!!p.bloc1EmailSent, b2email=!!p.bloc2EmailSent;
       const pDue=due(p), pPaid=paid(p), pBal=bal(p);
       const fullyPaid = pBal===0&&pDue>0;
