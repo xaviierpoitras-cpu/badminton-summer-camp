@@ -80,7 +80,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 .side-panel{width:240px;flex-shrink:0;background:var(--surface);border-left:0.5px solid var(--border-light);padding:1.25rem;overflow-y:auto;max-height:calc(100vh - 53px);position:sticky;top:53px}
 
 /* GROUP BADGES */
-.gbadge{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;letter-spacing:.01em}
+.gbadge{display:inline-block;font-size:13px;font-weight:500;padding:5px 12px;border-radius:20px;letter-spacing:-.01em}
 .gbadge-adv1{background:var(--adv1-bg);color:var(--adv1)}
 .gbadge-adv2{background:var(--adv2-bg);color:var(--adv2)}
 .gbadge-int1{background:var(--int1-bg);color:var(--int1)}
@@ -89,28 +89,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Ne
 /* CALENDAR TABLE */
 .cal-section{background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem;border:0.5px solid var(--border-light)}
 .cal-header{padding:14px 20px;display:flex;align-items:center;gap:10px;background:var(--surface);border-bottom:0.5px solid var(--border-light)}
-.bloc-pill{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;background:var(--accent);color:#fff;letter-spacing:-.01em}
-.cal-date-range{font-size:13px;color:var(--text2)}
+.bloc-pill{font-size:13px;font-weight:600;padding:6px 16px;border-radius:20px;background:var(--accent);color:#fff;letter-spacing:-.01em}
+.cal-date-range{font-size:14px;color:var(--text2);font-weight:400}
+.cal-header{padding:16px 24px;display:flex;align-items:center;gap:12px;background:var(--surface);border-bottom:0.5px solid var(--border-light)}
 .cal-table{width:100%;border-collapse:collapse}
-.cal-table th{padding:10px 12px;text-align:center;font-size:12px;font-weight:500;color:var(--text2);background:var(--bg);border-bottom:0.5px solid var(--border-light);letter-spacing:-.01em;white-space:nowrap}
-.cal-table th:first-child{text-align:left;min-width:110px;padding-left:20px}
-.cal-table td{padding:10px 8px;border-bottom:0.5px solid var(--border-light);text-align:center;vertical-align:middle}
-.cal-table td:first-child{padding-left:20px;text-align:left}
+.cal-table th{padding:14px 10px;text-align:center;font-size:13px;font-weight:500;color:var(--text2);background:var(--bg);border-bottom:0.5px solid var(--border-light);white-space:nowrap}
+.cal-table th:first-child{text-align:left;min-width:120px;padding-left:24px}
+.cal-table td{padding:16px 8px;border-bottom:0.5px solid var(--border-light);text-align:center;vertical-align:middle}
+.cal-table td:first-child{padding-left:24px;text-align:left}
 .cal-table tr:last-child td{border-bottom:none}
 .cal-table tr:hover td{background:rgba(0,0,0,.015)}
 
 /* SPOT INDICATORS */
-.spot-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
-.spot-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .15s}
-.spot-wrap:hover .spot-circle{transform:scale(1.12)}
-.spot-open{background:#E8F9EF;border:2px solid #34C759;box-shadow:0 0 0 4px rgba(52,199,89,.1)}
-.spot-yours{background:#FFF3E0;border:2px solid #FF9500;box-shadow:0 0 0 4px rgba(255,149,0,.1);font-size:15px}
-.spot-full{background:#F2F2F7;border:1.5px solid #D1D1D6;opacity:.6}
-.spot-none{color:var(--border);font-size:14px;line-height:32px}
-.spot-label{font-size:10px;font-weight:500;letter-spacing:.02em}
-.spot-label.open{color:#1C7C4A}
-.spot-label.yours{color:#B25000}
-.spot-label.full{color:var(--text3)}
+.spot-wrap{display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer}
+.spot-circle{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
+.spot-wrap:hover .spot-circle{transform:scale(1.1)}
+.spot-open{background:#E8F9EF;border:2.5px solid #34C759;box-shadow:0 0 0 5px rgba(52,199,89,.12)}
+.spot-yours{background:#FFF3E0;border:2.5px solid #FF9500;box-shadow:0 0 0 5px rgba(255,149,0,.12);font-size:18px}
+.spot-full{background:#F2F2F7;border:1.5px solid #D1D1D6;opacity:.45}
+.spot-none{color:#D1D1D6;font-size:20px;line-height:40px}
+.spot-label{display:none}
 
 /* RESERVATION CARDS */
 .res-card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;border:0.5px solid var(--border-light);border-left:3px solid var(--border-light)}
@@ -484,7 +482,7 @@ function renderGrid(){
 
     if(mySpots.length){
       html += `<div style="margin-bottom:1.75rem">
-        <h3 style="font-size:17px;font-weight:600;letter-spacing:-.03em;margin-bottom:12px">My Reservations <span style="font-size:14px;font-weight:400;color:var(--text2)">(${mySpots.length})</span></h3>
+        <h2 style="font-size:24px;font-weight:700;letter-spacing:-.04em;margin-bottom:12px">My Reservations <span style="font-size:14px;font-weight:400;color:var(--text2)">(${mySpots.length})</span></h3>
         <div style="background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:var(--radius);padding:11px 14px;margin-bottom:12px;font-size:13px;color:var(--green);display:flex;align-items:center;gap:8px">
           <span>📧</span><span>E-transfer to <strong>${ETRANSFER_EMAIL}</strong> — send payment to confirm your spot.</span>
         </div>
@@ -506,7 +504,10 @@ function renderGrid(){
     }
   }
 
-  // ── CALENDAR GRID: by bloc, dates = columns, groups = rows ──────────────
+  // ── CALENDAR GRID ─────────────────────────────────────────────────────────
+  html += `<h2 style="font-size:24px;font-weight:700;letter-spacing:-.04em;color:var(--text);margin-bottom:1.25rem">Availability</h2>`;
+
+  // by bloc, dates = columns, groups = rows
   // Bloc 1 = weeks 1-3, Bloc 2 = weeks 4-6
   const blocs = [
     { label: 'Bloc 1', weeks: [1,2,3], groups: isAdmin ? ['adv1','int1'] : (currentUser.group==='advanced' ? ['adv1'] : ['int1']) },
@@ -584,11 +585,10 @@ function renderGrid(){
   });
 
   // Legend
-  html += `<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text2);padding:12px 4px">
-    <span style="display:flex;align-items:center;gap:7px"><span style="width:16px;height:16px;border-radius:50%;background:#E8F9EF;border:2px solid #34C759;display:inline-block;box-shadow:0 0 0 3px rgba(52,199,89,.1)"></span>Available</span>
-    <span style="display:flex;align-items:center;gap:7px"><span style="width:16px;height:16px;border-radius:50%;background:#FFF3E0;border:2px solid #FF9500;display:inline-flex;align-items:center;justify-content:center;font-size:9px">🏸</span>Your spot</span>
-    <span style="display:flex;align-items:center;gap:7px"><span style="width:16px;height:16px;border-radius:50%;background:#F2F2F7;border:1.5px solid #D1D1D6;display:inline-block;opacity:.6"></span>Full</span>
-    <span style="display:flex;align-items:center;gap:7px"><span style="color:var(--border);font-size:14px">—</span>No practice</span>
+  html += `<div style="display:flex;gap:24px;flex-wrap:wrap;font-size:14px;color:var(--text2);padding:16px 4px;align-items:center">
+    <span style="display:flex;align-items:center;gap:9px"><span style="width:20px;height:20px;border-radius:50%;background:#E8F9EF;border:2.5px solid #34C759;display:inline-block;box-shadow:0 0 0 4px rgba(52,199,89,.1)"></span>Available</span>
+    <span style="display:flex;align-items:center;gap:9px"><span style="width:20px;height:20px;border-radius:50%;background:#FFF3E0;border:2.5px solid #FF9500;display:inline-flex;align-items:center;justify-content:center;font-size:11px">🏸</span>Your spot</span>
+    <span style="display:flex;align-items:center;gap:9px"><span style="width:20px;height:20px;border-radius:50%;background:#F2F2F7;border:1.5px solid #D1D1D6;display:inline-block;opacity:.6"></span>Full</span>
   </div>`;
 
   el.innerHTML = html;
