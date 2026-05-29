@@ -757,12 +757,13 @@ function buildPaymentsUI(players){
     const pDue=due(p), pPaid=paid(p), pBal=bal(p);
     const fullyPaid=pBal===0&&pDue>0;
     const initials = p.name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);background:${fullyPaid?'#F0FDF4':'transparent'}">
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);background:${fullyPaid?'#F0FDF4':'transparent'};border-left:${fullyPaid?'3px solid #16a34a':'3px solid transparent'};padding-left:${fullyPaid?'11px':'14px'}">
       <div style="width:32px;height:32px;border-radius:50%;background:${fullyPaid?'var(--accent-bg)':'var(--warn-bg)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:${fullyPaid?'var(--accent-text)':'var(--warn)'};flex-shrink:0;font-family:'DM Mono',monospace">${initials}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <button onclick="openEditPlayer('${p.id}')" style="font-size:14px;font-weight:500;color:var(--accent-text);background:none;border:none;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;text-decoration:underline;text-align:left">${p.name}</button>
           ${p.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:1px 7px;border-radius:20px">${p.pin}</span>`:''}
+          ${fullyPaid?`<span style="font-size:11px;font-weight:600;background:#DCFCE7;color:#15803D;padding:2px 9px;border-radius:20px;border:1px solid #86EFAC">✅ Paid</span>`:''}
         </div>
         <div style="font-size:11px;color:var(--text3)">${p.subgroup||p.group} · ${p.inBloc1&&p.inBloc2?'B1 + B2':p.inBloc1?'B1 only':p.inBloc2?'B2 only':'⚠️ No bloc assigned'}</div>
       </div>
