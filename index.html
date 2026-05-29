@@ -618,61 +618,77 @@ async function loadAdminPlayers(){
 }
 
 function renderMyReservations(){
-  const mySpots = Object.entries(spots).filter(([k,s]) => s.reservedBy === currentUser.name);
+  const mySpots = Object.entries(spots)
+    .filter(([k,s]) => s.reservedBy === currentUser.name)
+    .sort(([,a],[,b]) => (a.dateId||'').localeCompare(b.dateId||''));
+
   let html = '';
 
   if(!mySpots.length){
-    html += `<div style="text-align:center;padding:3rem 1rem">
-      <div style="font-size:48px;margin-bottom:1rem">🏸</div>
-      <p style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:8px">No reservations yet</p>
+    html = `<div style="text-align:center;padding:4rem 1rem">
+      <div style="font-size:52px;margin-bottom:1rem">🏸</div>
+      <p style="font-size:17px;font-weight:600;color:var(--text);margin-bottom:8px">No reservations yet</p>
       <p style="font-size:14px;color:var(--text2)">Go to <strong>Spots</strong> to reserve an available practice slot.</p>
     </div>`;
-  } else {
-    html += `<div style="margin-bottom:1.25rem">
-      <h2 style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">My Reservations</h2>
-      <p style="font-size:13px;color:var(--text2)">${mySpots.length} spot${mySpots.length!==1?'s':''} reserved</p>
-    </div>`;
-
-    // Info box
-    html += `<div style="background:var(--accent-bg);border:1px solid #b6d9c4;border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem">
-      <p style="font-size:13px;color:var(--accent-text);margin-bottom:4px">📧 <strong>E-transfer to:</strong> ${ETRANSFER_EMAIL}</p>
-      <p style="font-size:12px;color:var(--accent-text)">Send payment after each reservation to confirm your spot.</p>
-    </div>`;
-
-    // Group by date
-    const byDate = {};
-    mySpots.forEach(([k,s]) => {
-      if(!byDate[s.dateId]) byDate[s.dateId] = [];
-      byDate[s.dateId].push([k,s]);
-    });
-
-    Object.entries(byDate).sort(([a],[b])=>a.localeCompare(b)).forEach(([dateId, entries]) => {
-      entries.forEach(([key,s]) => {
-        const g = GROUPS[s.group];
-        const isPaid = !!s.paid;
-        html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-            <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                <span class="gbadge ${g.badge}">${g.label}</span>
-                <span style="font-size:15px;font-weight:600;color:var(--text)">${s.dateLabel}</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <span style="font-size:13px;font-family:'DM Mono',monospace;font-weight:600;color:var(--accent-text)">$${g.price}</span>
-                ${isPaid
-                  ? `<span style="background:#DCFCE7;color:#166534;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid #86EFAC">✅ Payment confirmed</span>`
-                  : `<span style="background:#FEF9C3;color:#854D0E;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid #FDE047">⏳ Payment pending</span>`}
-              </div>
-            </div>
-            <button class="btn-cancel" style="font-size:13px;padding:7px 14px;color:var(--danger);border-color:var(--danger)" 
-              onclick="cancelReservation('${key}')">Cancel</button>
-          </div>
-        </div>`;
-      });
-    });
+    document.getElementById('main-area').innerHTML = html;
+    return;
   }
 
-  el.innerHTML = html;
+  // Stats
+  const paid   = mySpots.filter(([,s])=>s.paid).length;
+  const unpaid = mySpots.length - paid;
+
+  html = `
+  <div style="margin-bottom:1.25rem">
+    <h2 style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">My Reservations</h2>
+    <p style="font-size:13px;color:var(--text2)">${mySpots.length} spot${mySpots.length!==1?'s':''} reserved · ${paid} confirmed · ${unpaid} pending</p>
+  </div>
+
+  <div style="background:var(--accent-bg);border:1px solid #b6d9c4;border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem;display:flex;gap:10px;align-items:flex-start">
+    <span style="font-size:18px">📧</span>
+    <div>
+      <p style="font-size:13px;font-weight:600;color:var(--accent-text);margin-bottom:2px">E-transfer to: ${ETRANSFER_EMAIL}</p>
+      <p style="font-size:12px;color:var(--accent-text)">Send payment after each reservation. Your spot is confirmed once payment is received.</p>
+    </div>
+  </div>`;
+
+  // Group by week
+  const byWeek = {};
+  mySpots.forEach(([key,s])=>{
+    // Find week number
+    let weekNum = '?';
+    SCHEDULE.forEach(({week,days})=>{
+      days.forEach(d=>{ if(d.id===s.dateId) weekNum=week; });
+    });
+    if(!byWeek[weekNum]) byWeek[weekNum]=[];
+    byWeek[weekNum].push([key,s]);
+  });
+
+  Object.entries(byWeek).sort(([a],[b])=>Number(a)-Number(b)).forEach(([week, entries])=>{
+    html+=`<div style="margin-bottom:6px;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace;padding-bottom:4px;border-bottom:1px solid var(--border)">— Week ${week}</div>`;
+    entries.forEach(([key,s])=>{
+      const g = GROUPS[s.group];
+      const isPaid = !!s.paid;
+      html+=`<div style="background:var(--surface);border:1px solid ${isPaid?'#86EFAC':'var(--border)'};border-left:3px solid ${isPaid?'#16a34a':'var(--warn)'};border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <span class="gbadge ${g.badge}">${g.label}</span>
+            <span style="font-size:15px;font-weight:600;color:var(--text)">${s.dateLabel}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:13px;font-family:'DM Mono',monospace;font-weight:600;color:var(--accent-text)">$${g.price}</span>
+            ${isPaid
+              ? `<span style="background:#DCFCE7;color:#166534;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid #86EFAC">✅ Payment confirmed</span>`
+              : `<span style="background:#FEF9C3;color:#854D0E;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid #FDE047">⏳ Awaiting payment</span>`}
+          </div>
+        </div>
+        <button style="padding:6px 14px;border-radius:var(--radius);font-size:13px;border:1px solid #fca5a5;background:transparent;color:var(--danger);cursor:pointer;font-family:'DM Sans',sans-serif" onclick="cancelReservation('${key}')">Cancel</button>
+      </div>`;
+    });
+    html+=`<div style="margin-bottom:14px"></div>`;
+  });
+
+  document.getElementById('main-area').innerHTML = html;
 }
 
 let payFilter = 'all';
