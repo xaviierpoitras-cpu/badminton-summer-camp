@@ -1038,19 +1038,43 @@ async function addPlayer(){
 }
 
 async function seedBlocData(){
-  if(!confirm('Update all player bloc enrollment from master Excel data? This will overwrite existing bloc/subgroup data.')) return;
-  let updated=0;
+  if(!confirm('Sync all players from Excel data? This will update existing players AND add missing ones.')) return;
+  let updated=0, added=0;
   for(const p of BLOC_DATA){
-    const snap=await db.collection('players').where('name','==',p.name).limit(1).get();
-    if(!snap.empty){
-      await snap.docs[0].ref.update({
-        inBloc1:p.inBloc1, inBloc2:p.inBloc2,
-        subgroup:p.subgroup, price:p.price
+    // Try exact name match first
+    let snap = await db.collection('players').where('name','==',p.name).limit(1).get();
+    // Try case-insensitive via lowercase name field
+    if(snap.empty){
+      const all = await db.collection('players').get();
+      const match = all.docs.find(d=>{
+        const n = (d.data().name||'').toLowerCase().replace(/\*+/g,'').trim();
+        const target = p.name.toLowerCase().trim();
+        return n===target;
       });
+      if(match){
+        await match.ref.update({inBloc1:p.inBloc1,inBloc2:p.inBloc2,subgroup:p.subgroup,price:p.price});
+        updated++;
+        continue;
+      }
+    }
+    if(!snap.empty){
+      await snap.docs[0].ref.update({inBloc1:p.inBloc1,inBloc2:p.inBloc2,subgroup:p.subgroup,price:p.price});
       updated++;
+    } else {
+      // Player not in Firebase — add them with a placeholder PIN
+      const pin = String(Math.floor(1000+Math.random()*9000));
+      const pinHash = await sha256(pin);
+      await db.collection('players').add({
+        name:p.name, email:p.email,
+        group:p.group, subgroup:p.subgroup,
+        inBloc1:p.inBloc1, inBloc2:p.inBloc2,
+        price:p.price, pin, pinHash
+      });
+      added++;
+      console.log(`Added missing player: ${p.name} — PIN: ${pin}`);
     }
   }
-  alert(`✅ Updated ${updated} players with bloc data.`);
+  alert(`✅ Sync complete:\n• ${updated} players updated\n• ${added} players added\n\nCheck the browser console (F12) for PINs of newly added players.`);
   renderPayments();
 }
 
