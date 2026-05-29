@@ -712,6 +712,7 @@ function renderPayments(){
 function buildPaymentsUI(players){
   const el = document.getElementById('main-area');
   if(!el) return;
+  window._paymentPlayers = players;
 
   const priceOf = p => p.price||(p.group==='advanced'?250:78);
   const due     = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
@@ -735,6 +736,7 @@ function buildPaymentsUI(players){
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="downloadPaymentExcel()" style="padding:7px 14px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">⬇️ Download Excel</button>
+      <button onclick="openAddLatePlayer()" style="padding:7px 14px;border-radius:var(--radius);border:1px solid #86EFAC;background:var(--accent-bg);color:var(--accent-text);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">+ Late registration</button>
       <button onclick="seedBlocData()" style="padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif">↓ Sync from Excel</button>
     </div>
   </div>
@@ -762,17 +764,13 @@ function buildPaymentsUI(players){
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border)">
       <div style="width:32px;height:32px;border-radius:50%;background:${fullyPaid?'var(--accent-bg)':'var(--warn-bg)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:${fullyPaid?'var(--accent-text)':'var(--warn)'};flex-shrink:0;font-family:'DM Mono',monospace">${initials}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:500;color:var(--text)">${p.name}</div>
-        <div style="font-size:11px;color:var(--text3)">${p.subgroup||p.group} · ${p.inBloc1&&p.inBloc2?'B1 + B2':p.inBloc1?'B1 only':p.inBloc2?'B2 only':'No bloc'}</div>
+        <button onclick="openEditPlayer('${p.id}')" style="font-size:14px;font-weight:500;color:var(--accent-text);background:none;border:none;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;text-decoration:underline;text-align:left">${p.name}</button>
+        <div style="font-size:11px;color:var(--text3)">${p.subgroup||p.group} · ${p.inBloc1&&p.inBloc2?'B1 + B2':p.inBloc1?'B1 only':p.inBloc2?'B2 only':'⚠️ No bloc assigned'}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
         <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">$${pDue}</span>
         ${showPay ? `<button style="padding:4px 12px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent-text)" onclick="togglePaymentAll('${p.id}',${fullyPaid},${!!p.inBloc1},${!!p.inBloc2})">${fullyPaid?'Unmark':'✓ Mark paid'}</button>` : ''}
         <button style="padding:4px 10px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid ${emailDone?'var(--border)':'#86EFAC'};background:${emailDone?'transparent':'var(--accent-bg)'};color:${emailDone?'var(--text3)':'var(--accent-text)'}" onclick="toggleEmailAll('${p.id}',${emailDone},${!!p.inBloc1},${!!p.inBloc2})">${emailDone?'✉️ Sent':'Send email'}</button>
-        <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text3)">
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${p.inBloc1?'checked':''} onchange="updateBloc('${p.id}','inBloc1',this.checked)"> B1</label>
-          <label style="display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" ${p.inBloc2?'checked':''} onchange="updateBloc('${p.id}','inBloc2',this.checked)"> B2</label>
-        </span>
       </div>
     </div>`;
   }
@@ -1069,6 +1067,67 @@ async function togglePaid(key){
   if(!spots[key]) return;
   const newVal = !spots[key].paid;
   await db.collection('spots').doc(key).update({paid: newVal});
+}
+
+let editPlayerId = null;
+
+function openEditPlayer(id){
+  const p = window._paymentPlayers?.find(p=>p.id===id);
+  if(!p) return;
+  editPlayerId = id;
+  document.getElementById('edit-player-name').textContent = p.name + ' · ' + (p.email||'');
+  document.getElementById('edit-subgroup').value = p.subgroup||'Avancé 1';
+  document.getElementById('edit-bloc1').checked = !!p.inBloc1;
+  document.getElementById('edit-bloc2').checked = !!p.inBloc2;
+  document.getElementById('modal-edit-player').style.display='block';
+}
+
+async function saveEditPlayer(){
+  if(!editPlayerId) return;
+  const subgroup = document.getElementById('edit-subgroup').value;
+  const inBloc1  = document.getElementById('edit-bloc1').checked;
+  const inBloc2  = document.getElementById('edit-bloc2').checked;
+  const price    = subgroup.includes('vancé')?250:78;
+  const group    = subgroup.includes('vancé')?'advanced':'intermediate';
+  await db.collection('players').doc(editPlayerId).update({subgroup,inBloc1,inBloc2,price,group});
+  closeModal('modal-edit-player');
+}
+
+function openAddLatePlayer(){
+  document.getElementById('late-name').value='';
+  document.getElementById('late-email').value='';
+  document.getElementById('late-pin').value='';
+  document.getElementById('late-pin').style.background='';
+  document.getElementById('late-bloc1').checked=true;
+  document.getElementById('late-bloc2').checked=false;
+  document.getElementById('late-error').style.display='none';
+  document.getElementById('modal-late-player').style.display='block';
+}
+
+function updateLateSubgroups(){
+  const grp = document.getElementById('late-group').value;
+  const sel = document.getElementById('late-subgroup');
+  sel.innerHTML = grp==='advanced'
+    ? '<option>Avancé 1</option><option>Avancé 2</option>'
+    : '<option>Intermédiaire 1</option><option>Intermédiaire 2</option>';
+}
+
+async function submitLatePlayer(){
+  const name    = document.getElementById('late-name').value.trim();
+  const email   = document.getElementById('late-email').value.trim();
+  const pin     = document.getElementById('late-pin').value.trim();
+  const group   = document.getElementById('late-group').value;
+  const subgroup= document.getElementById('late-subgroup').value;
+  const inBloc1 = document.getElementById('late-bloc1').checked;
+  const inBloc2 = document.getElementById('late-bloc2').checked;
+  const price   = group==='advanced'?250:78;
+  if(!name||!email||pin.length!==4){
+    document.getElementById('late-error').style.display='block'; return;
+  }
+  const pinHash = await sha256(pin);
+  await db.collection('players').add({name,email,pin,pinHash,group,subgroup,inBloc1,inBloc2,price});
+  closeModal('modal-late-player');
+  alert(`✅ ${name} added with PIN ${pin}. Save this PIN to share with the family.`);
 }
 
 function closeModal(id){document.getElementById(id).style.display='none';}
