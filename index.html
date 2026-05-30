@@ -379,7 +379,7 @@ async function adminLogin(){
 }
 
 function enterApp(){
-  page = isAdmin ? 'admin' : 'public';
+  page = isAdmin ? 'payments' : 'public';
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('loading-msg').style.display='none';
@@ -428,8 +428,9 @@ function renderNav(){
     html+=`<button class="hbtn active">Spots</button>`;
   }
   if(isAdmin){
-    html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Admin</button>`;
-    html+=`<button class="hbtn${page==='payments'?' active':''}" onclick="setPage('payments')">💳 Payments</button>`;
+    html+=`<span style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;padding:5px 10px;border-radius:20px;font-weight:500">Admin</span>`;
+    html+=`<button class="hbtn${page==='payments'?' active':''}" onclick="setPage('payments')">Payments</button>`;
+    html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Spots</button>`;
   }
   html+=`<a href="guide.html" target="_blank" class="hbtn" style="text-decoration:none">📖 Guide</a>`;
   html+=`<button class="hbtn" onclick="logout()">Sign out</button>`;
@@ -461,8 +462,9 @@ function renderGrid(){
   const thColors = {adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
 
   // Determine enrolled blocs based on player data
-  const inBloc1 = !!currentUser.inBloc1;
-  const inBloc2 = !!currentUser.inBloc2;
+  // Default to true if not set in Firebase (assume enrolled in all blocs for their group)
+  const inBloc1 = currentUser.inBloc1 !== undefined ? !!currentUser.inBloc1 : true;
+  const inBloc2 = currentUser.inBloc2 !== undefined ? !!currentUser.inBloc2 : true;
 
   // A session is "theirs" if they're enrolled in that bloc
   function isEnrolledSession(grp){
@@ -539,7 +541,10 @@ function renderGrid(){
   }
 
   // ── CALENDAR GRID ─────────────────────────────────────────────────────────
-  html += `<h2 style="font-size:24px;font-weight:700;letter-spacing:-.04em;color:var(--text);margin-bottom:1.25rem">Availability</h2>`;
+  html += `<div style="margin-bottom:1.5rem">
+    <h2 style="font-size:26px;font-weight:700;letter-spacing:-.04em;color:var(--text);margin-bottom:4px">Available extra spots</h2>
+    <p style="font-size:14px;color:var(--text2)">Spots that opened up — reserve one if you'd like to attend an extra session.</p>
+  </div>`;
 
   // by bloc, dates = columns, groups = rows
   // Bloc 1 = weeks 1-3, Bloc 2 = weeks 4-6
@@ -630,10 +635,62 @@ function renderGrid(){
 
 
 function renderAdmin(){
-  let html = `<div class="admin-banner">🔐 Administrator mode</div>`;
-  html += renderAdminPanel();
-  html += renderAdminWeekGrid();
-  document.getElementById('main-area').innerHTML = html;
+  const el = document.getElementById('main-area');
+
+  // Build date+group options for add spot
+  let opts='';
+  SCHEDULE.forEach(({days})=>days.forEach(day=>{
+    day.groups.forEach(grp=>{
+      opts+=`<option value="${grp}||${day.id}||${day.label}">[${GROUPS[grp].label}] ${day.label}</option>`;
+    });
+  }));
+
+  const allSpots = Object.entries(spots);
+  const reserved = allSpots.filter(([,s])=>s.reservedBy);
+  const available = allSpots.filter(([,s])=>!s.reservedBy);
+
+  let spotRows = allSpots.length ? allSpots.map(([key,s])=>{
+    const g=GROUPS[s.group];
+    const isRes=!!s.reservedBy;
+    const isPaid=!!s.paid;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:0.5px solid var(--border-light);gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;flex-wrap:wrap">
+        <span class="gbadge ${g.badge}">${g.label}</span>
+        <span style="font-size:15px;font-weight:500;color:var(--text)">${s.dateLabel}</span>
+        ${isRes
+          ? `<span style="font-size:13px;color:var(--text2)">${s.reservedBy}</span>
+             <span style="font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500;background:${isPaid?'var(--green-bg)':'var(--warn-bg)'};color:${isPaid?'var(--green)':'var(--warn)'};border:0.5px solid ${isPaid?'var(--green-border)':'var(--warn-border)'}">${isPaid?'✅ Paid':'⏳ Unpaid'}</span>`
+          : `<span style="font-size:12px;color:#34C759;font-weight:500">Available</span>`}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        ${isRes?`<button style="padding:5px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:0.5px solid var(--warn-border);background:${isPaid?'transparent':'var(--green-bg)'};color:${isPaid?'var(--warn)':'var(--green)'}" onclick="togglePaid('${key}')">${isPaid?'Mark unpaid':'Mark paid'}</button>`:''}
+        <button style="padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:0.5px solid var(--border);color:var(--text3);background:transparent" onclick="removeSpot('${key}')">Remove</button>
+      </div>
+    </div>`;
+  }).join('') : `<p style="font-size:14px;color:var(--text3);padding:1rem 0;font-style:italic">No spots posted yet.</p>`;
+
+  el.innerHTML = `
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.04em;margin-bottom:.5rem">Spots</h2>
+  <p style="font-size:14px;color:var(--text2);margin-bottom:1.75rem">${allSpots.length} total · ${reserved.length} reserved · ${available.length} available</p>
+
+  <div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);border:0.5px solid var(--border-light);padding:24px;margin-bottom:1.5rem">
+    <h3 style="font-size:16px;font-weight:600;letter-spacing:-.02em;margin-bottom:16px;color:var(--text)">Add a spot</h3>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <label style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px">Group & date</label>
+        <select id="spot-select" style="width:100%;padding:11px 14px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:14px;outline:none">${opts}</select>
+      </div>
+      <button class="btn-green" style="padding:11px 24px;font-size:14px" onclick="addSpot()">Add spot</button>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);border:0.5px solid var(--border-light);padding:24px">
+    <h3 style="font-size:16px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px;color:var(--text)">All spots</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px">${allSpots.length} posted</p>
+    ${spotRows}
+  </div>
+
+  ${renderAdminWeekGrid()}`;
 }
 
 function renderAdminWeekGrid(){
