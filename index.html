@@ -467,23 +467,29 @@ function renderGrid(){
   // Get bloc enrollment from Firebase data, fallback to BLOC_DATA
   let inBloc1 = currentUser.inBloc1;
   let inBloc2 = currentUser.inBloc2;
+
+  // If not set in Firebase, look up in BLOC_DATA by name
   if(inBloc1 === undefined || inBloc2 === undefined){
-    // Look up in BLOC_DATA by name
-    const norm = n => n.toLowerCase().replace(/[^a-z ]/g,'').trim();
-    const match = BLOC_DATA.find(p => norm(p.name) === norm(currentUser.name||''));
+    const normName = s => (s||'').toLowerCase().replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/[ùûü]/g,'u').replace(/[^a-z0-9 ]/g,'').trim();
+    const playerNorm = normName(currentUser.name);
+    const match = BLOC_DATA.find(p => normName(p.name) === playerNorm);
+    console.log('[Enrolled Debug] player:', currentUser.name, '| norm:', playerNorm, '| match:', match ? match.name : 'NOT FOUND', '| inBloc1:', match?.inBloc1, 'inBloc2:', match?.inBloc2);
     if(match){
       if(inBloc1 === undefined) inBloc1 = match.inBloc1;
       if(inBloc2 === undefined) inBloc2 = match.inBloc2;
     }
   }
-  inBloc1 = inBloc1 !== false;  // default true only if not explicitly false
-  inBloc2 = !!inBloc2;          // default false if not set
+
+  // Final booleans
+  const playerInBloc1 = (inBloc1 !== false && inBloc1 !== undefined);
+  const playerInBloc2 = (inBloc2 === true);
+  console.log('[Enrolled Debug] Final — inBloc1:', playerInBloc1, 'inBloc2:', playerInBloc2);
 
   // A session is "theirs" if they're enrolled in that bloc
   function isEnrolledSession(grp){
     const isBloc1Group = grp==='adv1'||grp==='int1';
     const isBloc2Group = grp==='adv2'||grp==='int2';
-    return (isBloc1Group&&inBloc1)||(isBloc2Group&&inBloc2);
+    return (isBloc1Group && playerInBloc1)||(isBloc2Group && playerInBloc2);
   }
 
   function myReservation(dateId, grp){
@@ -506,7 +512,7 @@ function renderGrid(){
 
     // Always show money summary
     const playerPrice = currentUser.price||(currentUser.group==='advanced'?250:78);
-    const totalDue  = (inBloc1?playerPrice:0)+(inBloc2?playerPrice:0);
+    const totalDue  = (playerInBloc1?playerPrice:0)+(playerInBloc2?playerPrice:0);
     const totalPaid = (currentUser.bloc1Paid?playerPrice:0)+(currentUser.bloc2Paid?playerPrice:0);
     const balance   = totalDue-totalPaid;
 
