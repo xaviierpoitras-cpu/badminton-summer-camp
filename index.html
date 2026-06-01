@@ -408,6 +408,7 @@ function renderMain(){
   else if(page==='roster') renderRoster();
   else if(page==='admin') renderAdmin();
   else if(page==='payments') renderPayments();
+  else if(page==='roster') renderRoster();
 }
 function initials(n){return n.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();}
 
@@ -430,6 +431,7 @@ function renderNav(){
   if(isAdmin){
     html+=`<span style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;padding:5px 10px;border-radius:20px;font-weight:500">Admin</span>`;
     html+=`<button class="hbtn${page==='payments'?' active':''}" onclick="setPage('payments')">Payments</button>`;
+    html+=`<button class="hbtn${page==='roster'?' active':''}" onclick="setPage('roster')">Players</button>`;
     html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Spots</button>`;
   }
   html+=`<a href="guide.html" target="_blank" class="hbtn" style="text-decoration:none">📖 Guide</a>`;
@@ -1113,6 +1115,91 @@ async function togglePayment(id, bloc, current){
   update[bloc+'PaidDate'] = !current ? today : null;
   await db.collection('players').doc(id).update(update);
   renderPayments();
+}
+
+function renderRoster(){
+  const el = document.getElementById('main-area');
+  el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading...</p>';
+
+  db.collection('players').get().then(snap => {
+    const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+
+    // Group by subgroup
+    const groups = {
+      'Avancé 1':        {color:'var(--adv1)',bg:'var(--adv1-bg)',players:[]},
+      'Avancé 2':        {color:'var(--adv2)',bg:'var(--adv2-bg)',players:[]},
+      'Intermédiaire 1': {color:'var(--int1)',bg:'var(--int1-bg)',players:[]},
+      'Intermédiaire 2': {color:'var(--int2)',bg:'var(--int2-bg)',players:[]},
+    };
+
+    players.forEach(p => {
+      const grp = p.subgroup || (p.group==='advanced'?'Avancé 1':'Intermédiaire 1');
+      if(groups[grp]) groups[grp].players.push(p);
+    });
+
+    let html = `
+    <h2 style="font-size:26px;font-weight:700;letter-spacing:-.04em;margin-bottom:.4rem">Players</h2>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:1.75rem">${players.length} players enrolled</p>`;
+
+    Object.entries(groups).forEach(([groupName, grp]) => {
+      if(!grp.players.length) return;
+      const bloc1 = grp.players.filter(p=>p.inBloc1!==false);
+      const bloc2 = grp.players.filter(p=>p.inBloc2===true);
+
+      html += `<div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);border:0.5px solid var(--border-light);overflow:hidden;margin-bottom:1.25rem">
+        <div style="padding:16px 24px;border-bottom:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:10px;height:10px;border-radius:50%;background:${grp.color};display:inline-block;flex-shrink:0"></span>
+            <span style="font-size:16px;font-weight:600;letter-spacing:-.02em">${groupName}</span>
+          </div>
+          <span style="font-size:13px;color:var(--text2)">${grp.players.length} players</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light)">
+          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);border-right:0.5px solid var(--border-light)">Bloc 1 — ${bloc1.length} players</div>
+          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Bloc 2 — ${bloc2.length} players</div>
+        </div>`;
+
+      // Align players side by side: all players in b1 column, only b2 in b2 column
+      const maxRows = Math.max(bloc1.length, bloc2.length);
+      for(let i=0; i<maxRows; i++){
+        const p1 = bloc1[i];
+        const p2 = bloc2[i];
+        html += `<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light)">`;
+        // Bloc 1 cell
+        if(p1){
+          html += `<div style="padding:12px 24px;border-right:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div>
+              <button onclick="openEditPlayer('${p1.id}')" style="font-size:14px;font-weight:500;color:var(--accent-text);background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-align:left">${p1.name}</button>
+              ${p1.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-left:6px">${p1.pin}</span>`:''}
+            </div>
+            ${p1.inBloc2===true?`<span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:20px;white-space:nowrap;border:0.5px solid var(--border-light)">B1+B2</span>`:''}
+          </div>`;
+        } else {
+          html += `<div style="padding:12px 24px;border-right:0.5px solid var(--border-light)"></div>`;
+        }
+        // Bloc 2 cell
+        if(p2){
+          html += `<div style="padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div>
+              <button onclick="openEditPlayer('${p2.id}')" style="font-size:14px;font-weight:500;color:var(--accent-text);background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-align:left">${p2.name}</button>
+              ${p2.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-left:6px">${p2.pin}</span>`:''}
+            </div>
+            ${p2.inBloc1!==false?`<span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:20px;white-space:nowrap;border:0.5px solid var(--border-light)">B1+B2</span>`:''}
+          </div>`;
+        } else {
+          html += `<div style="padding:12px 24px"></div>`;
+        }
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+
+    el.innerHTML = html;
+    // Store players for edit modal
+    window._paymentPlayers = players;
+  }).catch(e => {
+    el.innerHTML = `<p style="color:var(--danger);padding:2rem">Error: ${e.message}</p>`;
+  });
 }
 
 function renderSide(){
