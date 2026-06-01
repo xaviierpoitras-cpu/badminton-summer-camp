@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Guide Admin — Badminton Excellence 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1C2F5E;--navy2:#243870;
+  --ink:#0F0F12;--ink2:#3A3A45;--ink3:#8A8A95;
+  --line:#E8E8EC;--line2:#F2F2F5;
+  --green:#1A6B3C;--green-bg:#EDF7F2;
+  --orange:#B25000;--orange-bg:#FFF5EB;
+  --red:#C0392B;--red-bg:#FFF2F1;
+}
+body{font-family:'DM Sans',sans-serif;background:#FAFAFA;color:var(--ink);line-height:1.6;font-size:15px}
+
+/* PAGE */
+.page{max-width:780px;margin:0 auto;padding:3rem 2rem 6rem}
+
+/* COVER */
+.cover{background:var(--navy);border-radius:20px;padding:3rem 2.5rem;margin-bottom:3rem;color:#fff;position:relative;overflow:hidden}
+.cover::before{content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.04)}
+.cover::after{content:'';position:absolute;right:40px;bottom:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.03)}
+.cover-badge{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin-bottom:1rem;display:block}
+.cover h1{font-family:'Instrument Serif',serif;font-size:clamp(32px,5vw,48px);line-height:1.1;margin-bottom:.5rem;font-style:italic}
+.cover-sub{font-size:15px;opacity:.6;margin-bottom:2rem}
+.cover-meta{display:flex;gap:1.5rem;flex-wrap:wrap}
+.cover-tag{font-size:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;color:rgba(255,255,255,.8)}
+
+/* TOC */
+.toc{border:1px solid var(--line);border-radius:14px;padding:1.5rem;margin-bottom:3rem;background:#fff}
+.toc-title{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:1rem}
+.toc-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line2);font-size:14px;color:var(--ink2)}
+.toc-item:last-child{border-bottom:none}
+.toc-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink3);width:20px;flex-shrink:0}
+
+/* SECTION */
+.section{margin-bottom:3rem}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:.5rem}
+.section h2{font-family:'Instrument Serif',serif;font-size:28px;font-style:italic;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--line)}
+
+/* STEPS */
+.step{display:flex;gap:1.25rem;padding:1.25rem 0;border-bottom:1px solid var(--line2)}
+.step:last-child{border-bottom:none}
+.step-n{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;font-family:'JetBrains Mono',monospace}
+.step-body h3{font-size:15px;font-weight:600;margin-bottom:4px;color:var(--ink)}
+.step-body p{font-size:14px;color:var(--ink2);line-height:1.6}
+
+/* CALLOUT */
+.callout{border-radius:12px;padding:14px 16px;margin:1rem 0;display:flex;gap:10px;font-size:14px}
+.callout.green{background:var(--green-bg);border:1px solid #B6DFC6;color:var(--green)}
+.callout.orange{background:var(--orange-bg);border:1px solid #FFD8A8;color:var(--orange)}
+.callout.red{background:var(--red-bg);border:1px solid #FFB3B0;color:var(--red)}
+.callout.blue{background:#EEF3FF;border:1px solid #C4D2FF;color:var(--navy)}
+.callout-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+
+/* MOCKUP */
+.mockup{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:1rem 0;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+.mockup-nav{background:var(--navy);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.m-logo{width:28px;height:28px;background:rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.m-btns{display:flex;gap:6px}
+.mbtn{padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.75);font-size:11px;font-family:'DM Sans',sans-serif}
+.mbtn.active{background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.4)}
+.mockup-body{padding:16px}
+
+/* TABLE DEMO */
+.demo-table{width:100%;border-collapse:collapse;font-size:13px}
+.demo-table th{padding:8px 12px;text-align:left;background:var(--line2);font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+.demo-table td{padding:10px 12px;border-bottom:1px solid var(--line2)}
+.demo-table tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px}
+.pill-green{background:var(--green-bg);color:var(--green)}
+.pill-orange{background:var(--orange-bg);color:var(--orange)}
+.pill-navy{background:#EEF3FF;color:var(--navy)}
+.pill-red{background:var(--red-bg);color:var(--red)}
+
+/* STAT CARDS */
+.stat-row{display:flex;gap:10px;margin:1rem 0;flex-wrap:wrap}
+.stat-card{flex:1;min-width:100px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:300;color:var(--ink)}
+.stat-val.green{color:var(--green)}
+.stat-val.orange{color:var(--orange)}
+
+/* CODE */
+code{background:var(--line2);border-radius:5px;padding:2px 7px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--navy)}
+
+/* FIELD LABEL */
+.field{background:var(--line2);border-radius:10px;padding:12px 14px;margin:6px 0;display:flex;align-items:center;justify-content:space-between;font-size:13px}
+.field-name{font-weight:500;color:var(--ink)}
+.field-desc{font-size:12px;color:var(--ink3);text-align:right}
+
+/* KEYBOARD */
+kbd{background:#fff;border:1px solid var(--line);border-bottom:3px solid #D0D0D8;border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink2)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--line);margin:2.5rem 0}
+
+/* FOOTER */
+.footer{text-align:center;font-size:12px;color:var(--ink3);padding-top:2rem;border-top:1px solid var(--line)}
+
+@media print{
+  body{font-size:12px}
+  .cover{break-inside:avoid}
+  .section{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- COVER -->
+<div class="cover">
+  <span class="cover-badge">Document confidentiel</span>
+  <h1>Guide<br/>Administrateur</h1>
+  <p class="cover-sub">Badminton Excellence — Été 2026</p>
+  <div class="cover-meta">
+    <span class="cover-tag">🔒 Usage interne seulement</span>
+    <span class="cover-tag">xaviierpoitras-cpu.github.io/badminton-summer-camp</span>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-title">Contenu</div>
+  <div class="toc-item"><span class="toc-num">01</span>Se connecter en admin</div>
+  <div class="toc-item"><span class="toc-num">02</span>Page Payments — suivi des paiements</div>
+  <div class="toc-item"><span class="toc-num">03</span>Page Spots — gestion des places</div>
+  <div class="toc-item"><span class="toc-num">04</span>Modifier l'inscription d'un joueur</div>
+  <div class="toc-item"><span class="toc-num">05</span>Ajouter une inscription tardive</div>
+  <div class="toc-item"><span class="toc-num">06</span>Permission inter-groupe</div>
+  <div class="toc-item"><span class="toc-num">07</span>Exporter les données Excel</div>
+  <div class="toc-item"><span class="toc-num">08</span>Référence rapide</div>
+</div>
+
+<!-- 01 -->
+<div class="section">
+  <span class="section-num">01 — Connexion</span>
+  <h2>Se connecter en admin</h2>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <h3>Ouvrir le lien</h3>
+      <p>Va sur <code>xaviierpoitras-cpu.github.io/badminton-summer-camp</code> dans n'importe quel navigateur.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <h3>Cliquer sur « Organizer access »</h3>
+      <p>En bas de la page de login, il y a un petit lien discret. Clique dessus pour afficher les champs email et mot de passe.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div style="background:#FBFBFD;padding:20px;display:flex;justify-content:center">
+          <div style="background:#fff;border-radius:16px;border:1px solid var(--line);padding:24px;width:280px;text-align:center">
+            <div style="font-size:24px;margin-bottom:8px">🏸</div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px">Badminton Excellence</div>
+            <div style="display:flex;gap:8px;justify-content:center;margin:14px 0">
+              <div style="width:44px;height:50px;border:1.5px solid var(--line);border-radius:10px"></div>
+              <div style="width:44px;height:50px;border:1.5px solid var(--line);border-radius:10px"></div>
+              <div style="width:44px;height:50px;border:1.5px solid var(--line);border-radius:10px"></div>
+              <div style="width:44px;height:50px;border:1.5px solid var(--line);border-radius:10px"></div>
+            </div>
+            <div style="width:100%;padding:10px;background:var(--navy);color:#fff;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:10px">Accéder →</div>
+            <div style="font-size:12px;color:var(--green);text-decoration:underline;cursor:pointer">🔒 Organizer access</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body">
+      <h3>Entrer les identifiants</h3>
+      <div style="background:#F5F5F7;border-radius:10px;padding:14px 16px;margin:8px 0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2">
+        <span style="color:#8A8A95">Email &nbsp;&nbsp;&nbsp;</span> badmintonexcellence@gmail.com<br/>
+        <span style="color:#8A8A95">Password </span> badminton
+      </div>
+      <p>Clique <strong>Sign in as organizer</strong>.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">4</div>
+    <div class="step-body">
+      <h3>Interface admin</h3>
+      <p>Une fois connecté, tu vois la barre de navigation avec tes onglets. La page s'ouvre directement sur <strong>Payments</strong>.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-nav">
+          <div class="m-logo">🏸</div>
+          <div class="m-btns">
+            <div style="font-size:11px;background:rgba(255,255,255,.15);color:#fff;padding:4px 10px;border-radius:20px">Admin</div>
+            <div class="mbtn active">Payments</div>
+            <div class="mbtn">Spots</div>
+            <div class="mbtn">📖 Guide</div>
+            <div class="mbtn">Sign out</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 02 -->
+<div class="section">
+  <span class="section-num">02 — Payments</span>
+  <h2>Suivi des paiements</h2>
+  <p style="font-size:14px;color:var(--ink2);margin-bottom:1.5rem">C'est ta page principale. Tu y vois tous les joueurs regroupés par statut.</p>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-label">Total dû</div><div class="stat-val">$14 324</div></div>
+    <div class="stat-card"><div class="stat-label">Collecté</div><div class="stat-val green">$4 250</div></div>
+    <div class="stat-card"><div class="stat-label">Restant</div><div class="stat-val orange">$10 074</div></div>
+    <div class="stat-card"><div class="stat-label">Payés</div><div class="stat-val">12/57</div></div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <h3>Trois sections colorées</h3>
+      <p>Les joueurs sont séparés en : <strong>Unpaid</strong> (rouge), <strong>Paid</strong> (vert), <strong>Email pending</strong>.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <h3>Marquer un paiement reçu</h3>
+      <p>Trouve le joueur → clique le bouton <strong>✓ Mark paid</strong> à droite de son nom. La rangée passe en vert instantanément. Le paiement est enregistré avec la date d'aujourd'hui.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-body" style="padding:0">
+          <table class="demo-table">
+            <thead><tr><th>Joueur</th><th>PIN</th><th>Groupe</th><th>Montant</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr style="background:#F0FDF4;border-left:3px solid #34C759">
+                <td><strong>Alexandre Bidal</strong><br/><span style="font-size:11px;color:var(--ink3)">rcbidal@gmail.com</span></td>
+                <td><code>1197</code></td>
+                <td><span class="pill pill-navy">Avancé 1</span></td>
+                <td>$500</td>
+                <td><span class="pill pill-green">✅ Paid</span></td>
+              </tr>
+              <tr>
+                <td><strong>Aiqi Tan</strong><br/><span style="font-size:11px;color:var(--ink3)">yina.wang@gmail.com</span></td>
+                <td><code>1546</code></td>
+                <td><span class="pill pill-orange">Int. 2</span></td>
+                <td>$156</td>
+                <td><button style="padding:4px 12px;border-radius:20px;background:#EEF3FF;color:var(--navy);border:1px solid #C4D2FF;font-size:12px;font-weight:500;cursor:pointer">✓ Mark paid</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout blue" style="margin-top:8px">
+        <span class="callout-icon">💡</span>
+        <span>Si tu fais une erreur, clique <strong>Unmark</strong> pour annuler le paiement.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body">
+      <h3>Filtres disponibles</h3>
+      <p>En haut de la page : <code>All</code> · <code>Unpaid</code> · <code>Paid</code> · <code>Advanced</code> · <code>Intermediate</code> — pour naviguer rapidement.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">4</div>
+    <div class="step-body">
+      <h3>Synchroniser les données depuis Excel</h3>
+      <p>Si tu ajoutes des joueurs dans le fichier Excel maître : clique <strong>↓ Sync from Excel</strong> en haut à droite. Les blocs et groupes de tous les joueurs seront mis à jour dans Firebase.</p>
+      <div class="callout orange">
+        <span class="callout-icon">⚠️</span>
+        <span>Le Sync écrase les données de bloc (B1/B2) mais <strong>ne supprime pas</strong> les données de paiement déjà enregistrées.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 03 -->
+<div class="section">
+  <span class="section-num">03 — Spots</span>
+  <h2>Gestion des places disponibles</h2>
+  <p style="font-size:14px;color:var(--ink2);margin-bottom:1.5rem">Les places sont des sessions supplémentaires que les joueurs peuvent réserver.</p>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <h3>Ajouter une place</h3>
+      <p>Dans l'onglet <strong>Spots</strong>, choisis le groupe et la date dans le menu déroulant → clique <strong>Add spot</strong>. Tu peux ajouter plusieurs places pour la même date (une place = un joueur peut réserver).</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <h3>Voir les réservations</h3>
+      <p>La liste en dessous montre toutes les places. Les places réservées indiquent le nom du joueur et si le paiement a été confirmé.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-body" style="padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line2)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="pill pill-navy">Advanced 1</span>
+              <span style="font-size:14px;font-weight:500">Mon 6 Jul</span>
+              <span style="font-size:13px;color:var(--ink2)">Zhengyang Xiao</span>
+              <span class="pill pill-green">✅ Paid</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button style="padding:4px 12px;border-radius:20px;background:var(--orange-bg);color:var(--orange);border:1px solid #FFD8A8;font-size:12px">Mark unpaid</button>
+              <button style="padding:4px 10px;border-radius:20px;background:transparent;color:var(--ink3);border:1px solid var(--line);font-size:12px">Remove</button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="pill pill-navy">Advanced 1</span>
+              <span style="font-size:14px;font-weight:500">Wed 8 Jul</span>
+              <span style="font-size:12px;color:#34C759;font-weight:500">Available</span>
+            </div>
+            <button style="padding:4px 10px;border-radius:20px;background:transparent;color:var(--ink3);border:1px solid var(--line);font-size:12px">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body">
+      <h3>Confirmer le paiement d'une session individuelle</h3>
+      <p>Pour chaque spot réservé, tu peux cliquer <strong>Mark paid</strong> directement sur la ligne pour confirmer que tu as reçu le paiement pour cette session spécifique.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">4</div>
+    <div class="step-body">
+      <h3>Retirer une place</h3>
+      <p>Clique <strong>Remove</strong> à droite de la ligne. Si la place était réservée, la réservation est annulée automatiquement.</p>
+      <div class="callout red">
+        <span class="callout-icon">⚠️</span>
+        <span>Retirer une place réservée <strong>annule</strong> la réservation du joueur. Contacte-le si un remboursement est nécessaire.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 04 -->
+<div class="section">
+  <span class="section-num">04 — Inscription</span>
+  <h2>Modifier l'inscription d'un joueur</h2>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <h3>Trouver le joueur</h3>
+      <p>Dans l'onglet <strong>Payments</strong>, repère le joueur dans la liste.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <h3>Cliquer sur son nom (souligné)</h3>
+      <p>Le nom du joueur est un lien souligné en bleu. Clique dessus pour ouvrir la fenêtre de modification.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body">
+      <h3>Modifier et sauvegarder</h3>
+      <p>Tu peux changer : le <strong>sous-groupe</strong> (Avancé 1/2, Intermédiaire 1/2) et les <strong>blocs</strong> (Bloc 1, Bloc 2). Clique <strong>Save changes</strong>.</p>
+      <div class="callout green">
+        <span class="callout-icon">✅</span>
+        <span>Les changements sont sauvegardés dans Firebase instantanément. Le joueur voit la mise à jour au prochain chargement.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 05 -->
+<div class="section">
+  <span class="section-num">05 — Inscription tardive</span>
+  <h2>Ajouter une inscription tardive</h2>
+
+  <div class="callout blue" style="margin-bottom:1.5rem">
+    <span class="callout-icon">ℹ️</span>
+    <span>Pour les joueurs qui s'inscrivent après le début du camp.</span>
+  </div>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <h3>Cliquer « + Late registration »</h3>
+      <p>En haut à droite de la page <strong>Payments</strong>, ce bouton ouvre le formulaire d'inscription tardive.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <h3>Remplir le formulaire</h3>
+      <div class="field"><span class="field-name">Nom complet</span><span class="field-desc">Prénom Nom du joueur</span></div>
+      <div class="field"><span class="field-name">Email</span><span class="field-desc">Courriel du parent</span></div>
+      <div class="field"><span class="field-name">Groupe</span><span class="field-desc">Advanced / Intermediate</span></div>
+      <div class="field"><span class="field-name">Sous-groupe</span><span class="field-desc">Avancé 1 ou 2 / Int. 1 ou 2</span></div>
+      <div class="field"><span class="field-name">Blocs</span><span class="field-desc">Cocher Bloc 1 et/ou Bloc 2</span></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body">
+      <h3>Générer le PIN</h3>
+      <p>Clique <strong>Generate →</strong> — un PIN unique est créé automatiquement (vérifie qu'il n'est pas déjà pris).</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">4</div>
+    <div class="step-body">
+      <h3>⚠️ NOTER LE PIN avant de fermer</h3>
+      <p>Une fois le modal fermé, le PIN n'est plus visible en clair (seulement haché dans Firebase). <strong>Écris-le immédiatement</strong> pour l'envoyer à la famille.</p>
+      <div class="callout red">
+        <span class="callout-icon">🔴</span>
+        <span>Le PIN <strong>ne peut pas être récupéré</strong> après fermeture du modal. Si tu l'oublies, tu dois supprimer le joueur et recommencer.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 06 -->
+<div class="section">
+  <span class="section-num">06 — Permission</span>
+  <h2>Autoriser une réservation inter-groupe</h2>
+  <p style="font-size:14px;color:var(--ink2);margin-bottom:1.5rem">Par défaut, un joueur avancé ne peut réserver que dans les groupes avancés. Cette option lui permet de réserver dans l'autre groupe — une seule fois.</p>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <h3>Trouver le joueur dans Payments → cliquer son nom</h3>
+      <p>Dans la fenêtre d'édition, tu verras l'option de sous-groupe qui te permet de voir ses paramètres actuels.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <h3>Activer via la liste des joueurs dans Admin → Spots</h3>
+      <p>Si la liste des joueurs est visible, clique <strong>Grant cross-group</strong> à côté du joueur. Un badge 🔓 apparaît.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">3</div>
+    <div class="step-body">
+      <h3>Fonctionnement</h3>
+      <p>Dès que le joueur utilise la permission pour réserver dans l'autre groupe, elle est <strong>automatiquement révoquée</strong>. Tu peux aussi la révoquer manuellement à tout moment.</p>
+      <div class="callout orange">
+        <span class="callout-icon">⚠️</span>
+        <span>La permission est à usage unique. Si le joueur a besoin d'une deuxième réservation inter-groupe, tu dois l'accorder à nouveau.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 07 -->
+<div class="section">
+  <span class="section-num">07 — Export</span>
+  <h2>Exporter les données Excel</h2>
+
+  <div class="step">
+    <div class="step-n">1</div>
+    <div class="step-body">
+      <h3>Cliquer « ⬇️ Download Excel »</h3>
+      <p>En haut de la page <strong>Payments</strong>. Le fichier est téléchargé instantanément.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-n">2</div>
+    <div class="step-body">
+      <h3>Contenu du fichier</h3>
+      <table class="demo-table" style="margin-top:8px">
+        <thead><tr><th>Colonne</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>Nom</code></td><td>Nom complet du joueur</td></tr>
+          <tr><td><code>Email</code></td><td>Courriel du parent</td></tr>
+          <tr><td><code>Groupe / Sous-groupe</code></td><td>Advanced, Avancé 1, etc.</td></tr>
+          <tr><td><code>Bloc 1 / Bloc 2</code></td><td>Oui / Non</td></tr>
+          <tr><td><code>Total dû / payé / balance</code></td><td>Montants calculés</td></tr>
+          <tr><td><code>Date paiement B1/B2</code></td><td>Date marquée dans l'app</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 08 -->
+<div class="section">
+  <span class="section-num">08 — Référence</span>
+  <h2>Référence rapide</h2>
+
+  <table class="demo-table">
+    <thead><tr><th>Action</th><th>Où</th><th>Comment</th></tr></thead>
+    <tbody>
+      <tr><td>Marquer paiement reçu</td><td>Payments</td><td>Bouton ✓ Mark paid à droite du joueur</td></tr>
+      <tr><td>Modifier inscription</td><td>Payments</td><td>Cliquer sur le nom souligné</td></tr>
+      <tr><td>Ajouter inscription tardive</td><td>Payments</td><td>Bouton + Late registration (haut droite)</td></tr>
+      <tr><td>Ajouter une place dispo</td><td>Spots</td><td>Menu + Add spot</td></tr>
+      <tr><td>Retirer une place</td><td>Spots</td><td>Bouton Remove sur la ligne</td></tr>
+      <tr><td>Confirmer paiement session</td><td>Spots</td><td>Bouton Mark paid sur le spot réservé</td></tr>
+      <tr><td>Exporter Excel</td><td>Payments</td><td>Bouton ⬇️ Download Excel</td></tr>
+      <tr><td>Sync données blocs</td><td>Payments</td><td>Bouton ↓ Sync from Excel</td></tr>
+      <tr><td>Permission inter-groupe</td><td>Admin → liste</td><td>Grant cross-group sur le joueur</td></tr>
+      <tr><td>Se déconnecter</td><td>Nav bar</td><td>Bouton Sign out</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:1.5rem;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px">
+    <div style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:12px">Infos utiles</div>
+    <div style="font-size:13px;color:var(--ink2);line-height:2">
+      E-transfer : <code>samtessier01@hotmail.com</code><br/>
+      URL du site : <code>xaviierpoitras-cpu.github.io/badminton-summer-camp</code><br/>
+      Guide joueurs : <code>.../guide.html</code><br/>
+      Avancé · Bloc 1 = <code>$250</code> · Bloc 2 = <code>$250</code><br/>
+      Intermédiaire · Bloc 1 = <code>$78</code> · Bloc 2 = <code>$78</code>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Badminton Excellence 2026 · Document confidentiel · Usage interne seulement</p>
+  <p style="margin-top:4px">Ne pas distribuer ni publier en ligne</p>
+</div>
+
+</div>
+</body>
+</html>
