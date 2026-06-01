@@ -15,9 +15,9 @@
 
 <style>
 :root{
-  --bg:#F5F5F7;
+  --bg:#F0F3F9;
   --surface:#FFFFFF;
-  --surface2:#F5F5F7;
+  --surface2:#EBF0F8;
   --border:#D2D2D7;
   --border-light:#E8E8ED;
   --text:#1D1D1F;
@@ -431,8 +431,8 @@ function renderNav(){
   if(isAdmin){
     html+=`<span style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;padding:5px 10px;border-radius:20px;font-weight:500">Admin</span>`;
     html+=`<button class="hbtn${page==='payments'?' active':''}" onclick="setPage('payments')">Payments</button>`;
-    html+=`<button class="hbtn${page==='roster'?' active':''}" onclick="setPage('roster')">Players</button>`;
     html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Spots</button>`;
+    html+=`<button class="hbtn${page==='roster'?' active':''}" onclick="setPage('roster')">Players</button>`;
   }
   html+=`<a href="guide.html" target="_blank" class="hbtn" style="text-decoration:none">📖 Guide</a>`;
   html+=`<button class="hbtn" onclick="logout()">Sign out</button>`;
@@ -1147,16 +1147,16 @@ function renderRoster(){
       const bloc2 = grp.players.filter(p=>p.inBloc2===true);
 
       html += `<div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);border:0.5px solid var(--border-light);overflow:hidden;margin-bottom:1.25rem">
-        <div style="padding:16px 24px;border-bottom:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between">
+        <div style="padding:16px 24px;border-bottom:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;background:${grp.bg}">
           <div style="display:flex;align-items:center;gap:10px">
             <span style="width:10px;height:10px;border-radius:50%;background:${grp.color};display:inline-block;flex-shrink:0"></span>
-            <span style="font-size:16px;font-weight:600;letter-spacing:-.02em">${groupName}</span>
+            <span style="font-size:16px;font-weight:600;letter-spacing:-.02em;color:${grp.color}">${groupName}</span>
           </div>
-          <span style="font-size:13px;color:var(--text2)">${grp.players.length} players</span>
+          <span style="font-size:13px;color:${grp.color};opacity:.7">${grp.players.length} players</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light)">
-          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);border-right:0.5px solid var(--border-light)">Bloc 1 — ${bloc1.length} players</div>
-          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Bloc 2 — ${bloc2.length} players</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light);background:var(--surface2)">
+          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);border-right:0.5px solid var(--border-light)">Bloc 1 — ${bloc1.length}</div>
+          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)">Bloc 2 — ${bloc2.length}</div>
         </div>`;
 
       // Align players side by side: all players in b1 column, only b2 in b2 column
@@ -1164,7 +1164,8 @@ function renderRoster(){
       for(let i=0; i<maxRows; i++){
         const p1 = bloc1[i];
         const p2 = bloc2[i];
-        html += `<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light)">`;
+        const rowBg = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
+        html += `<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light);background:${rowBg}">`;
         // Bloc 1 cell
         if(p1){
           html += `<div style="padding:12px 24px;border-right:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;gap:8px">
