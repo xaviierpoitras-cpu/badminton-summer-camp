@@ -464,9 +464,20 @@ function renderGrid(){
   const thColors = {adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
 
   // Determine enrolled blocs based on player data
-  // Default to true if not set in Firebase (assume enrolled in all blocs for their group)
-  const inBloc1 = currentUser.inBloc1 !== undefined ? !!currentUser.inBloc1 : true;
-  const inBloc2 = currentUser.inBloc2 !== undefined ? !!currentUser.inBloc2 : true;
+  // Get bloc enrollment from Firebase data, fallback to BLOC_DATA
+  let inBloc1 = currentUser.inBloc1;
+  let inBloc2 = currentUser.inBloc2;
+  if(inBloc1 === undefined || inBloc2 === undefined){
+    // Look up in BLOC_DATA by name
+    const norm = n => n.toLowerCase().replace(/[^a-z ]/g,'').trim();
+    const match = BLOC_DATA.find(p => norm(p.name) === norm(currentUser.name||''));
+    if(match){
+      if(inBloc1 === undefined) inBloc1 = match.inBloc1;
+      if(inBloc2 === undefined) inBloc2 = match.inBloc2;
+    }
+  }
+  inBloc1 = inBloc1 !== false;  // default true only if not explicitly false
+  inBloc2 = !!inBloc2;          // default false if not set
 
   // A session is "theirs" if they're enrolled in that bloc
   function isEnrolledSession(grp){
@@ -1285,6 +1296,19 @@ async function reserveSpot(key){
     alert('Your one-time cross-group permission has been used.');
   }
   closeModal('modal-spot');
+}
+
+function showEnrolledInfo(dateLabel, grp){
+  const g = GROUPS[grp];
+  document.getElementById('spot-title').textContent = g.label;
+  document.getElementById('spot-sub').textContent = dateLabel;
+  document.getElementById('spot-body').innerHTML = `
+    <div style="background:var(--accent-bg);border:0.5px solid var(--green-border);border-radius:var(--radius);padding:14px 16px;margin-top:8px">
+      <p style="font-size:14px;font-weight:500;color:var(--accent-text);margin-bottom:4px">✅ You are enrolled in this session</p>
+      <p style="font-size:13px;color:var(--accent-text)">This is part of your <strong>${g.label}</strong> registration.</p>
+    </div>`;
+  document.getElementById('spot-actions').innerHTML = `<button class="btn-cancel" onclick="closeModal('modal-spot')" style="flex:1">Close</button>`;
+  document.getElementById('modal-spot').style.display='block';
 }
 
 async function cancelReservation(key){
