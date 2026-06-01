@@ -1121,86 +1121,82 @@ function renderRoster(){
   const el = document.getElementById('main-area');
   el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading...</p>';
 
-  db.collection('players').get().then(snap => {
+  // Use onSnapshot for real-time updates
+  if(window._rosterUnsub) window._rosterUnsub();
+  window._rosterUnsub = db.collection('players').onSnapshot(snap => {
     const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-
-    // Group by subgroup
-    const groups = {
-      'Avancé 1':        {color:'var(--adv1)',bg:'var(--adv1-bg)',players:[]},
-      'Avancé 2':        {color:'var(--adv2)',bg:'var(--adv2-bg)',players:[]},
-      'Intermédiaire 1': {color:'var(--int1)',bg:'var(--int1-bg)',players:[]},
-      'Intermédiaire 2': {color:'var(--int2)',bg:'var(--int2-bg)',players:[]},
-    };
-
-    players.forEach(p => {
-      const grp = p.subgroup || (p.group==='advanced'?'Avancé 1':'Intermédiaire 1');
-      if(groups[grp]) groups[grp].players.push(p);
-    });
-
-    let html = `
-    <h2 style="font-size:26px;font-weight:700;letter-spacing:-.04em;margin-bottom:.4rem">Players</h2>
-    <p style="font-size:14px;color:var(--text2);margin-bottom:1.75rem">${players.length} players enrolled</p>`;
-
-    Object.entries(groups).forEach(([groupName, grp]) => {
-      if(!grp.players.length) return;
-      const bloc1 = grp.players.filter(p=>p.inBloc1!==false);
-      const bloc2 = grp.players.filter(p=>p.inBloc2===true);
-
-      html += `<div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);border:0.5px solid var(--border-light);overflow:hidden;margin-bottom:1.25rem">
-        <div style="padding:16px 24px;border-bottom:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;background:${grp.bg}">
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="width:10px;height:10px;border-radius:50%;background:${grp.color};display:inline-block;flex-shrink:0"></span>
-            <span style="font-size:16px;font-weight:600;letter-spacing:-.02em;color:${grp.color}">${groupName}</span>
-          </div>
-          <span style="font-size:13px;color:${grp.color};opacity:.7">${grp.players.length} players</span>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light);background:var(--surface2)">
-          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);border-right:0.5px solid var(--border-light)">Bloc 1 — ${bloc1.length}</div>
-          <div style="padding:10px 24px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)">Bloc 2 — ${bloc2.length}</div>
-        </div>`;
-
-      // Align players side by side: all players in b1 column, only b2 in b2 column
-      const maxRows = Math.max(bloc1.length, bloc2.length);
-      for(let i=0; i<maxRows; i++){
-        const p1 = bloc1[i];
-        const p2 = bloc2[i];
-        const rowBg = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
-        html += `<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid var(--border-light);background:${rowBg}">`;
-        // Bloc 1 cell
-        if(p1){
-          html += `<div style="padding:12px 24px;border-right:0.5px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <div>
-              <button onclick="openEditPlayer('${p1.id}')" style="font-size:14px;font-weight:500;color:var(--accent-text);background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-align:left">${p1.name}</button>
-              ${p1.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-left:6px">${p1.pin}</span>`:''}
-            </div>
-            ${p1.inBloc2===true?`<span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:20px;white-space:nowrap;border:0.5px solid var(--border-light)">B1+B2</span>`:''}
-          </div>`;
-        } else {
-          html += `<div style="padding:12px 24px;border-right:0.5px solid var(--border-light)"></div>`;
-        }
-        // Bloc 2 cell
-        if(p2){
-          html += `<div style="padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <div>
-              <button onclick="openEditPlayer('${p2.id}')" style="font-size:14px;font-weight:500;color:var(--accent-text);background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-align:left">${p2.name}</button>
-              ${p2.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-left:6px">${p2.pin}</span>`:''}
-            </div>
-            ${p2.inBloc1!==false?`<span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:20px;white-space:nowrap;border:0.5px solid var(--border-light)">B1+B2</span>`:''}
-          </div>`;
-        } else {
-          html += `<div style="padding:12px 24px"></div>`;
-        }
-        html += `</div>`;
-      }
-      html += `</div>`;
-    });
-
-    el.innerHTML = html;
-    // Store players for edit modal
     window._paymentPlayers = players;
-  }).catch(e => {
-    el.innerHTML = `<p style="color:var(--danger);padding:2rem">Error: ${e.message}</p>`;
+    buildRosterUI(players);
   });
+}
+
+const GROUP_COLORS = {
+  'Avancé 1':        {dark:'#1C4A2E', light:'#EDFAF3', dot:'var(--adv1)'},
+  'Avancé 2':        {dark:'#122A6B', light:'#EFF4FF', dot:'var(--adv2)'},
+  'Intermédiaire 1': {dark:'#3D1A6E', light:'#F6F0FF', dot:'var(--int1)'},
+  'Intermédiaire 2': {dark:'#5A2600', light:'#FFF5EB', dot:'var(--int2)'},
+};
+
+function buildRosterUI(players){
+  const el = document.getElementById('main-area');
+  if(!el) return;
+
+  const groups = {
+    'Avancé 1':        [],
+    'Avancé 2':        [],
+    'Intermédiaire 1': [],
+    'Intermédiaire 2': [],
+  };
+
+  players.forEach(p => {
+    const grp = p.subgroup || (p.group==='advanced'?'Avancé 1':'Intermédiaire 1');
+    if(groups[grp] !== undefined) groups[grp].push(p);
+  });
+
+  let html = `
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.04em;margin-bottom:.4rem">Players</h2>
+  <p style="font-size:14px;color:var(--text2);margin-bottom:1.75rem">${players.length} players enrolled</p>`;
+
+  Object.entries(groups).forEach(([groupName, gPlayers]) => {
+    if(!gPlayers.length) return;
+    const colors = GROUP_COLORS[groupName];
+    const b1count = gPlayers.filter(p=>p.inBloc1!==false).length;
+    const b2count = gPlayers.filter(p=>p.inBloc2===true).length;
+
+    html += `<div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem;border:0.5px solid var(--border-light)">
+      <!-- Group header -->
+      <div style="background:${colors.dark};padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:15px;font-weight:600;color:#fff;letter-spacing:-.02em">${groupName}</span>
+        <div style="display:flex;gap:16px">
+          <span style="font-size:12px;color:rgba(255,255,255,.7)">Bloc 1: <strong style="color:#fff">${b1count}</strong></span>
+          <span style="font-size:12px;color:rgba(255,255,255,.7)">Bloc 2: <strong style="color:#fff">${b2count}</strong></span>
+        </div>
+      </div>
+      <!-- Column headers -->
+      <div style="display:grid;grid-template-columns:1fr 80px 80px;padding:8px 24px;background:var(--surface2);border-bottom:0.5px solid var(--border-light)">
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)">Name</span>
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);text-align:center">Bloc 1</span>
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);text-align:center">Bloc 2</span>
+      </div>`;
+
+    gPlayers.forEach((p, i) => {
+      const inB1 = p.inBloc1 !== false;
+      const inB2 = p.inBloc2 === true;
+      const rowBg = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
+      html += `<div style="display:grid;grid-template-columns:1fr 80px 80px;padding:11px 24px;border-bottom:0.5px solid var(--border-light);background:${rowBg};align-items:center">
+        <div>
+          <button onclick="openEditPlayer('${p.id}')" style="font-size:14px;font-weight:500;color:${colors.dark};background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-align:left">${p.name}</button>
+          ${p.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-left:8px">${p.pin}</span>`:''}
+        </div>
+        <div style="text-align:center;font-size:16px">${inB1?'✓':''}</div>
+        <div style="text-align:center;font-size:16px">${inB2?'✓':''}</div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  el.innerHTML = html;
 }
 
 function renderSide(){
