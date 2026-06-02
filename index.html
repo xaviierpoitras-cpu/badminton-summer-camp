@@ -464,29 +464,17 @@ function renderGrid(){
   const thColors = {adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
 
   // Determine enrolled blocs based on player data
-  // Look up bloc enrollment — Firebase first, then BLOC_DATA as fallback
-  function getPlayerBlocs(){
-    // Try Firebase fields
-    if(currentUser.inBloc1 !== undefined || currentUser.inBloc2 !== undefined){
-      return { b1: currentUser.inBloc1 !== false, b2: !!currentUser.inBloc2 };
-    }
-    // Fallback: BLOC_DATA lookup by name (strip accents for comparison)
-    const strip = s => (s||'').toLowerCase()
-      .replace(/[éèêë]/g,'e').replace(/[àâä]/g,'a')
-      .replace(/[îï]/g,'i').replace(/[ôö]/g,'o')
-      .replace(/[ùûü]/g,'u').replace(/[^a-z ]/g,'').trim();
-    const pName = strip(currentUser.name);
-    for(const p of BLOC_DATA){
-      if(strip(p.name) === pName){
-        console.log('Bloc match found:', p.name, 'B1:', p.inBloc1, 'B2:', p.inBloc2);
-        return { b1: p.inBloc1 !== false, b2: !!p.inBloc2 };
-      }
-    }
-    console.warn('No bloc match for:', currentUser.name);
-    return { b1: true, b2: true }; // default: show all as enrolled
-  }
-  const { b1: playerInBloc1, b2: playerInBloc2 } = getPlayerBlocs();
-  console.log('Player', currentUser.name, '— B1:', playerInBloc1, 'B2:', playerInBloc2);
+  // ALWAYS use BLOC_DATA as source of truth for bloc enrollment
+  // (Firebase may have stale/incorrect inBloc1/inBloc2 from bad syncs)
+  const strip = s => (s||'').toLowerCase()
+    .replace(/[éèêë]/g,'e').replace(/[àâä]/g,'a')
+    .replace(/[îï]/g,'i').replace(/[ôö]/g,'o')
+    .replace(/[ùûü]/g,'u').replace(/[^a-z ]/g,'').trim();
+  const pName = strip(currentUser.name);
+  const blocMatch = BLOC_DATA.find(p => strip(p.name) === pName);
+  const playerInBloc1 = blocMatch ? blocMatch.inBloc1 !== false : true;
+  const playerInBloc2 = blocMatch ? !!blocMatch.inBloc2 : true;
+  console.log('Player:', currentUser.name, '| B1:', playerInBloc1, '| B2:', playerInBloc2, '| matched:', blocMatch ? blocMatch.name : 'NOT FOUND');
 
   function isEnrolledSession(grp){
     if(grp==='adv1'||grp==='int1') return playerInBloc1;
