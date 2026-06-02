@@ -562,7 +562,8 @@ function renderGrid(){
     { label: 'Bloc 2', weeks: [4,5,6], groups: isAdmin ? ['adv2','int2'] : (currentUser.group==='advanced' ? ['adv2'] : ['int2']) },
   ];
 
-  blocs.forEach(({label, weeks, groups})=>{
+  blocs.forEach(({label, weeks, groups}, blocIdx)=>{
+    const blocEnrolled = !isAdmin && (blocIdx===0 ? playerInBloc1 : playerInBloc2);
     // Collect all days for this bloc
     const blocDays = [];
     SCHEDULE.filter(s=>weeks.includes(s.week)).forEach(({week,days})=>{
