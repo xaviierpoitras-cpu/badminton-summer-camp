@@ -602,7 +602,11 @@ function renderGrid(){
         const avail = hasAvail(day.id, grp);
         const any   = hasAny(day.id, grp);
 
-        if(myRes){
+        if(blocEnrolled){
+          html+=`<td><div class="spot-wrap" onclick="showEnrolledInfo('${day.label}','${grp}')">
+            <div class="spot-circle spot-yours" style="cursor:pointer">🏸</div>
+          </div></td>`;
+        } else if(myRes){
           html+=`<td style="padding:8px 6px;border-bottom:1px solid var(--border);text-align:center">
             <div style="cursor:pointer" onclick="showCellModal('${day.id}','${grp}','${day.label}')">
               <div style="width:30px;height:30px;border-radius:50%;background:#FFF7ED;border:2.5px solid #F59E0B;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 0 3px rgba(245,158,11,.15)">🏸</div>
