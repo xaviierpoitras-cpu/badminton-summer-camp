@@ -946,37 +946,47 @@ function renderPayments(){
   if(!el){ setTimeout(renderPayments, 200); return; }
   el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading payments...</p>';
 
-  // Cancel previous listener if any
   if(paymentsUnsubscribe){ paymentsUnsubscribe(); paymentsUnsubscribe=null; }
 
-  paymentsUnsubscribe = db.collection('players').onSnapshot(snap => {
+  // Load both players AND spots simultaneously
+  paymentsUnsubscribe = db.collection('players').onSnapshot(async snap => {
     try {
       const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
       if(!players.length){
-        document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found. Add players first.</p>';
+        document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found.</p>';
         return;
       }
-      console.log('Players loaded:', players.length);
-      buildPaymentsUI(players);
+      // Get paid extra spots per player
+      const spotsSnap = await db.collection('spots').where('paid','==',true).get();
+      const paidSpots = spotsSnap.docs.map(d=>d.data());
+      // Build map: playerName → total paid for extra spots
+      const extraPaid = {};
+      paidSpots.forEach(s => {
+        if(!s.reservedBy) return;
+        const grp = GROUPS[s.group];
+        const amount = grp ? parseFloat(grp.price) : 0;
+        extraPaid[s.reservedBy] = (extraPaid[s.reservedBy]||0) + amount;
+      });
+      buildPaymentsUI(players, extraPaid);
     } catch(e) {
       console.error('buildPaymentsUI error:', e);
-      document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">JS Error: ${e.message}<br><small>${e.stack}</small></p>`;
+      document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Error: ${e.message}</p>`;
     }
   }, err => {
-    console.error('Firestore error:', err);
     document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Firestore Error: ${err.message}</p>`;
   });
 }
 
-function buildPaymentsUI(players){
+function buildPaymentsUI(players, extraPaid={}){
   const el = document.getElementById('main-area');
   if(!el) return;
   window._paymentPlayers = players;
 
-  const priceOf = p => p.price||(p.group==='advanced'?250:78);
-  const due     = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
-  const paid    = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0);
-  const bal     = p => due(p)-paid(p);
+  const priceOf  = p => (p.customPrice !== undefined ? p.customPrice : (p.price||(p.group==='advanced'?250:78)));
+  const extra    = p => extraPaid[p.name]||0;
+  const due      = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
+  const paid     = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0)+extra(p);
+  const bal      = p => due(p)-paid(p);
 
   const allDue    = players.reduce((s,p)=>s+due(p),0);
   const allPaid   = players.reduce((s,p)=>s+paid(p),0);
@@ -1024,7 +1034,7 @@ function buildPaymentsUI(players){
           ${p.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:1px 7px;border-radius:20px">${p.pin}</span>`:''}
           ${fullyPaid?`<span style="font-size:11px;font-weight:600;background:#DCFCE7;color:#15803D;padding:2px 9px;border-radius:20px;border:1px solid #86EFAC">✅ Paid</span>`:''}
         </div>
-        <div style="font-size:11px;color:var(--text3)">${p.subgroup||p.group} · ${p.inBloc1&&p.inBloc2?'B1 + B2':p.inBloc1?'B1 only':p.inBloc2?'B2 only':'⚠️ No bloc assigned'}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.subgroup||p.group} · ${p.inBloc1&&p.inBloc2?'B1 + B2':p.inBloc1?'B1 only':p.inBloc2?'B2 only':'⚠️ No bloc assigned'}${(extraPaid[p.name]||0)>0?` <span style='color:#1C7C4A;font-weight:500'>· +$${extraPaid[p.name]} extra sessions paid</span>`:''}</div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
         <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">$${pDue}</span>
@@ -1076,7 +1086,7 @@ async function downloadPaymentExcel(){
     return;
   }
   const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name));
-  const priceOf = p => p.price||(p.group==='advanced'?250:78);
+  const priceOf = p => (p.customPrice !== undefined ? p.customPrice : (p.price||(p.group==='advanced'?250:78)));
   const due  = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
   const paid = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0);
 
