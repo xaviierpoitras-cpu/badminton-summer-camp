@@ -1100,7 +1100,9 @@ function buildPaymentsUI(players, extraPaid={}){
 
   function playerRow(p, showPay){
     const pDue=due(p), pPaid=paid(p), pBal=bal(p);
-    const fullyPaid=pBal===0&&pDue>0;
+    const blocDueAmt = (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
+    const blocPaidAmt = (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0);
+    const fullyPaid = blocDueAmt>0 && blocPaidAmt>=blocDueAmt;
     const initials = p.name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--border);background:${fullyPaid?'#F0FDF4':'transparent'};border-left:${fullyPaid?'3px solid #16a34a':'3px solid transparent'};padding-left:${fullyPaid?'11px':'14px'}">
       <div style="width:32px;height:32px;border-radius:50%;background:${fullyPaid?'var(--accent-bg)':'var(--warn-bg)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:${fullyPaid?'var(--accent-text)':'var(--warn)'};flex-shrink:0;font-family:'DM Mono',monospace">${initials}</div>
@@ -1115,7 +1117,7 @@ function buildPaymentsUI(players, extraPaid={}){
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
         <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">$${pDue}</span>
-        ${showPay ? `<button style="padding:4px 12px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent-text)" onclick="togglePaymentAll('${p.id}',${fullyPaid},${!!p.inBloc1},${!!p.inBloc2})">${fullyPaid?'Unmark':'✓ Mark paid'}</button>` : ''}
+        ${(p.inBloc1||p.inBloc2) ? `<button style="padding:4px 12px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid var(--accent);background:${fullyPaid?'var(--green-bg)':'var(--accent-bg)'};color:${fullyPaid?'var(--green)':'var(--accent-text)'}" onclick="togglePaymentAll('${p.id}',${fullyPaid},${!!p.inBloc1},${!!p.inBloc2})">${fullyPaid?'✅ Unmark':'✓ Mark paid'}</button>` : ''}
 
       </div>
     </div>`;
@@ -1231,7 +1233,6 @@ async function togglePaymentAll(id, current, inBloc1, inBloc2){
   if(inBloc1){ update['bloc1Paid']=newVal; update['bloc1PaidDate']=newVal?today:null; }
   if(inBloc2){ update['bloc2Paid']=newVal; update['bloc2PaidDate']=newVal?today:null; }
   await db.collection('players').doc(id).update(update);
-  renderPayments();
 }
 
 async function togglePayment(id, bloc, current){
@@ -1241,7 +1242,6 @@ async function togglePayment(id, bloc, current){
   update[bloc+'Paid'] = !current;
   update[bloc+'PaidDate'] = !current ? today : null;
   await db.collection('players').doc(id).update(update);
-  renderPayments();
 }
 
 function renderRoster(){
