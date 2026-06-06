@@ -346,7 +346,11 @@ function startSpotsListener(){
   db.collection('spots').onSnapshot(snap=>{
     spots={};
     snap.forEach(doc=>{spots[doc.id]=doc.data();});
-    if(currentUser) renderAll();
+    if(currentUser){
+      renderNav();
+      // Only re-render main if NOT on payments (payments has its own listener)
+      if(page !== 'payments') renderMain();
+    }
   });
   loadEnrolledCounts();
 }
@@ -431,9 +435,10 @@ function logout(){
 // ── RENDER ──────────────────────────────────────
 let page = 'public';
 function setPage(p){
-  // Clean up payment spots listener when leaving payments page
-  if(page==='payments' && p!=='payments' && window._paySpotsUnsub){
-    window._paySpotsUnsub(); window._paySpotsUnsub=null;
+  // Clean up payment listeners when leaving payments page
+  if(page==='payments' && p!=='payments'){
+    if(paymentsUnsubscribe){ paymentsUnsubscribe(); paymentsUnsubscribe=null; }
+    if(window._paySpotsUnsub){ window._paySpotsUnsub(); window._paySpotsUnsub=null; }
   }
   page=p; renderAll();
 }
@@ -1000,9 +1005,9 @@ function renderPayments(){
   if(!el){ setTimeout(renderPayments, 200); return; }
   el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading payments...</p>';
 
-  if(paymentsUnsubscribe){ paymentsUnsubscribe(); paymentsUnsubscribe=null; }
+  // Don't restart if already running — prevents player disappearing on spot updates
+  if(paymentsUnsubscribe) return;
 
-  // Load both players AND spots simultaneously
   // Cache for cross-listener data
   let _payPlayers = [];
   let _paySpots = {};
