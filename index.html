@@ -255,8 +255,8 @@ const BLOC_DATA = [{"name": "Aiqi Tan", "email": "yina.wang0210@gmail.com", "gro
 //  ⚙️  CONFIGURATION
 // ═══════════════════════════════════════════════
 const ETRANSFER_EMAIL = 'samtessier01@hotmail.com';
-const PRICE_ADV = (250/9).toFixed(2);
-const PRICE_INT = (78/3).toFixed(2);
+const PRICE_ADV = '30.00';
+const PRICE_INT = '30.00';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBcz5pFIy8PDM3i_KeL9HV-Y-kZoxNV2C0",
@@ -430,7 +430,13 @@ function logout(){
 
 // ── RENDER ──────────────────────────────────────
 let page = 'public';
-function setPage(p){ page=p; renderAll(); }
+function setPage(p){
+  // Clean up payment spots listener when leaving payments page
+  if(page==='payments' && p!=='payments' && window._paySpotsUnsub){
+    window._paySpotsUnsub(); window._paySpotsUnsub=null;
+  }
+  page=p; renderAll();
+}
 function renderAll(){ renderNav(); renderMain(); }
 function renderMain(){
   if(page==='public') renderGrid();
@@ -541,8 +547,12 @@ function renderGrid(){
 
     // Always show money summary
     const playerPrice = currentUser.price||(currentUser.group==='advanced'?250:78);
-    const totalDue  = (playerInBloc1?playerPrice:0)+(playerInBloc2?playerPrice:0);
-    const totalPaid = (currentUser.bloc1Paid?playerPrice:0)+(currentUser.bloc2Paid?playerPrice:0);
+    // Count extra spots reserved by this player
+    const myExtraSpots = Object.values(spots).filter(s=>s.reservedBy===currentUser.name);
+    const extraCost = myExtraSpots.length * 30;
+    const extraPaidAmt = myExtraSpots.filter(s=>s.paid).length * 30;
+    const totalDue  = (playerInBloc1?playerPrice:0)+(playerInBloc2?playerPrice:0)+extraCost;
+    const totalPaid = (currentUser.bloc1Paid?playerPrice:0)+(currentUser.bloc2Paid?playerPrice:0)+extraPaidAmt;
     const balance   = totalDue-totalPaid;
 
     html += `<div style="margin-bottom:2rem">
@@ -993,32 +1003,37 @@ function renderPayments(){
   if(paymentsUnsubscribe){ paymentsUnsubscribe(); paymentsUnsubscribe=null; }
 
   // Load both players AND spots simultaneously
-  paymentsUnsubscribe = db.collection('players').onSnapshot(async snap => {
-    try {
-      const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-      if(!players.length){
-        document.getElementById('main-area').innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">No players found.</p>';
-        return;
-      }
-      // Get paid extra spots per player
-      const spotsSnap = await db.collection('spots').where('paid','==',true).get();
-      const paidSpots = spotsSnap.docs.map(d=>d.data());
-      // Build map: playerName → total paid for extra spots
-      const extraPaid = {};
-      paidSpots.forEach(s => {
-        if(!s.reservedBy) return;
-        const grp = GROUPS[s.group];
-        const amount = grp ? parseFloat(grp.price) : 0;
-        extraPaid[s.reservedBy] = (extraPaid[s.reservedBy]||0) + amount;
-      });
-      buildPaymentsUI(players, extraPaid);
-    } catch(e) {
-      console.error('buildPaymentsUI error:', e);
-      document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Error: ${e.message}</p>`;
-    }
+  // Cache for cross-listener data
+  let _payPlayers = [];
+  let _paySpots = {};
+
+  function _rebuildPayments(){
+    if(!_payPlayers.length) return;
+    // Build extraPaid map from paid spots
+    const extraPaid = {};
+    Object.values(_paySpots).forEach(s => {
+      if(!s.reservedBy || !s.paid) return;
+      extraPaid[s.reservedBy] = (extraPaid[s.reservedBy]||0) + 30;
+    });
+    buildPaymentsUI(_payPlayers, extraPaid);
+  }
+
+  // Listen to players
+  paymentsUnsubscribe = db.collection('players').onSnapshot(snap => {
+    _payPlayers = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    _rebuildPayments();
   }, err => {
-    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center">Firestore Error: ${err.message}</p>`;
+    document.getElementById('main-area').innerHTML = `<p style="color:var(--danger);padding:2rem">Error: ${err.message}</p>`;
   });
+
+  // Also listen to spots for extra payment updates
+  const spotsUnsub = db.collection('spots').onSnapshot(snap => {
+    _paySpots = {};
+    snap.forEach(doc => { _paySpots[doc.id] = doc.data(); });
+    _rebuildPayments();
+  });
+  // Store for cleanup
+  window._paySpotsUnsub = spotsUnsub;
 }
 
 function buildPaymentsUI(players, extraPaid={}){
@@ -1027,6 +1042,7 @@ function buildPaymentsUI(players, extraPaid={}){
   window._paymentPlayers = players;
 
   const priceOf  = p => (p.customPrice !== undefined ? p.customPrice : (p.price||(p.group==='advanced'?250:78)));
+  const EXTRA_PRICE = 30;
   const extra    = p => extraPaid[p.name]||0;
   const due      = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
   const paid     = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0)+extra(p);
