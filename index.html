@@ -1110,6 +1110,31 @@ async function downloadPaymentExcel(){
   XLSX.writeFile(wb, 'paiements_badminton_'+today+'.xlsx');
 }
 
+let _editPriceId = null;
+
+function openEditPrice(id, name, currentDue){
+  _editPriceId = id;
+  document.getElementById('edit-price-player').textContent = name;
+  document.getElementById('edit-price-input').value = currentDue || '';
+  document.getElementById('edit-price-input').focus();
+  document.getElementById('modal-edit-price').style.display = 'block';
+}
+
+async function saveEditPrice(){
+  if(!_editPriceId) return;
+  const val = parseInt(document.getElementById('edit-price-input').value);
+  const update = {};
+  // Only set customPrice — never touch any existing fields
+  if(!val || val <= 0){
+    update.customPrice = firebase.firestore.FieldValue.delete();
+  } else {
+    update.customPrice = val;
+  }
+  await db.collection('players').doc(_editPriceId).update(update);
+  closeModal('modal-edit-price');
+  // renderPayments will auto-refresh via onSnapshot
+}
+
 async function togglePaymentAll(id, current, inBloc1, inBloc2){
   const today = new Date().toISOString().split('T')[0];
   const newVal = !current;
@@ -1553,6 +1578,26 @@ document.getElementById('p0').focus();
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal('modal-late-player')">Cancel</button>
         <button class="btn-primary" onclick="submitLatePlayer()">Add player</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: edit price -->
+<div id="modal-edit-price" style="display:none">
+  <div class="modal-overlay" onclick="closeModal('modal-edit-price')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:320px">
+      <h3>Edit amount</h3>
+      <p class="modal-sub" id="edit-price-player" style="font-weight:500;color:var(--text)"></p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Enter a custom total amount for this player. Existing payment status is preserved.</p>
+      <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:6px">Custom total ($)</label>
+      <input id="edit-price-input" type="number" min="0" step="1" 
+             style="width:100%;padding:11px 14px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:18px;font-weight:300;outline:none;transition:border-color .15s"
+             placeholder="0"/>
+      <p style="font-size:12px;color:var(--text3);margin-top:6px">Leave blank or 0 to reset to default price.</p>
+      <div class="modal-actions" style="margin-top:1.25rem">
+        <button class="btn-cancel" onclick="closeModal('modal-edit-price')">Cancel</button>
+        <button class="btn-primary" onclick="saveEditPrice()">Save</button>
       </div>
     </div>
   </div>
