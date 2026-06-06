@@ -312,25 +312,21 @@ async function sha256(msg){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// Enrolled player counts per group (for auto-spots)
-let enrolledCounts = {adv1:0, adv2:0, int1:0, int2:0};
+// Enrolled player counts per group (computed from BLOC_DATA synchronously)
 const MAX_CAPACITY = 12;
 
-function loadEnrolledCounts(){
-  db.collection('players').get().then(snap=>{
-    const counts = {adv1:0, adv2:0, int1:0, int2:0};
-    snap.forEach(doc=>{
-      const p = doc.data();
-      const sub = p.subgroup||'';
-      if(sub==='Avancé 1'      && p.inBloc1!==false) counts.adv1++;
-      if(sub==='Avancé 2'      && p.inBloc2===true)  counts.adv2++;
-      if(sub==='Intermédiaire 1' && p.inBloc1!==false) counts.int1++;
-      if(sub==='Intermédiaire 2' && p.inBloc2===true)  counts.int2++;
-    });
-    enrolledCounts = counts;
-    if(currentUser) renderAll();
+function computeEnrolledCounts(){
+  const counts = {adv1:0, adv2:0, int1:0, int2:0};
+  BLOC_DATA.forEach(p => {
+    const sub = p.subgroup||'';
+    if(sub==='Avancé 1'         && p.inBloc1!==false) counts.adv1++;
+    if(sub==='Avancé 2'         && p.inBloc2===true)  counts.adv2++;
+    if(sub==='Intermédiaire 1'  && p.inBloc1!==false) counts.int1++;
+    if(sub==='Intermédiaire 2'  && p.inBloc2===true)  counts.int2++;
   });
+  return counts;
 }
+let enrolledCounts = computeEnrolledCounts();
 
 // Auto-available spots for a group on a given date
 function autoAvail(dateId, grp){
@@ -352,7 +348,6 @@ function startSpotsListener(){
       if(page !== 'payments') renderMain();
     }
   });
-  loadEnrolledCounts();
 }
 
 // ── LOGIN ──────────────────────────────────────
