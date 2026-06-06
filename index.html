@@ -469,6 +469,7 @@ function renderNav(){
     html+=`<button class="hbtn${page==='payments'?' active':''}" onclick="setPage('payments')">Payments</button>`;
     html+=`<button class="hbtn${page==='admin'?' active':''}" onclick="setPage('admin')">Spots</button>`;
     html+=`<button class="hbtn${page==='roster'?' active':''}" onclick="setPage('roster')">Players</button>`;
+    if(page!=='payments') html+=`<button class="hbtn" onclick="setPage('payments')" style="opacity:.6">← Back</button>`;
   }
   html+=`<a href="${isAdmin?'guide_admin_sam.html':'guide.html'}" target="_blank" class="hbtn" style="text-decoration:none">📖 Guide</a>`;
   html+=`<button class="hbtn" onclick="logout()">Sign out</button>`;
@@ -1109,7 +1110,8 @@ function buildPaymentsUI(players, extraPaid={}){
           ${p.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;background:var(--warn-bg);color:var(--warn);padding:1px 7px;border-radius:20px">${p.pin}</span>`:''}
           ${fullyPaid?`<span style="font-size:11px;font-weight:600;background:#DCFCE7;color:#15803D;padding:2px 9px;border-radius:20px;border:1px solid #86EFAC">✅ Paid</span>`:''}
         </div>
-        <div style="font-size:11px;color:var(--text3)">${p.subgroup||p.group} · ${p.inBloc1&&p.inBloc2?'B1 + B2':p.inBloc1?'B1 only':p.inBloc2?'B2 only':'⚠️ No bloc assigned'}${(extraPaid[p.name]||0)>0?` <span style='color:#1C7C4A;font-weight:500'>· +$${extraPaid[p.name]} extra sessions paid</span>`:''}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.subgroup||p.group} · ${p.inBloc1&&p.inBloc2?'B1 + B2':p.inBloc1?'B1 only':p.inBloc2?'B2 only':'⚠️ No bloc assigned'}${(extraPaid[p.name]||0)>0?` <span style='color:#1C7C4A;font-weight:500'>· +$${extraPaid[p.name]} extra</span>`:''}</div>
+        ${(p.bloc1PaidDate||p.bloc2PaidDate)?`<div style="font-size:11px;color:var(--text3);margin-top:1px">${[p.bloc1Paid&&p.bloc1PaidDate?'B1: '+p.bloc1PaidDate:'',p.bloc2Paid&&p.bloc2PaidDate?'B2: '+p.bloc2PaidDate:''].filter(Boolean).join(' · ')}</div>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">
         <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--text)">$${pDue}</span>
@@ -1191,7 +1193,8 @@ async function downloadPaymentExcel(){
   const cols = Object.keys(rows[0]).map(k=>({wch:Math.max(k.length,12)}));
   ws['!cols'] = cols;
 
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = now.toISOString().split('T')[0] + ' ' + now.toTimeString().slice(0,5);
   XLSX.writeFile(wb, 'paiements_badminton_'+today+'.xlsx');
 }
 
@@ -1221,7 +1224,8 @@ async function saveEditPrice(){
 }
 
 async function togglePaymentAll(id, current, inBloc1, inBloc2){
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = now.toISOString().split('T')[0] + ' ' + now.toTimeString().slice(0,5);
   const newVal = !current;
   const update = {};
   if(inBloc1){ update['bloc1Paid']=newVal; update['bloc1PaidDate']=newVal?today:null; }
@@ -1231,7 +1235,8 @@ async function togglePaymentAll(id, current, inBloc1, inBloc2){
 }
 
 async function togglePayment(id, bloc, current){
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = now.toISOString().split('T')[0] + ' ' + now.toTimeString().slice(0,5);
   const update = {};
   update[bloc+'Paid'] = !current;
   update[bloc+'PaidDate'] = !current ? today : null;
