@@ -255,8 +255,8 @@ const BLOC_DATA = [{"name": "Aiqi Tan", "email": "yina.wang0210@gmail.com", "gro
 //  ⚙️  CONFIGURATION
 // ═══════════════════════════════════════════════
 const ETRANSFER_EMAIL = 'samtessier01@hotmail.com';
-const PRICE_ADV = '30.00';
-const PRICE_INT = '30.00';
+const PRICE_ADV = (250/9).toFixed(2);
+const PRICE_INT = (78/3).toFixed(2);
 
 const firebaseConfig = {
   apiKey: "AIzaSyBcz5pFIy8PDM3i_KeL9HV-Y-kZoxNV2C0",
@@ -554,8 +554,9 @@ function renderGrid(){
     const playerPrice = currentUser.price||(currentUser.group==='advanced'?250:78);
     // Count extra spots reserved by this player
     const myExtraSpots = Object.values(spots).filter(s=>s.reservedBy===currentUser.name);
-    const extraCost    = myExtraSpots.length * 30;           // all reserved extras
-    const extraPaidAmt = myExtraSpots.filter(s=>s.paid).length * 30; // paid extras
+    const extraRate    = (currentUser.name||'').toLowerCase().includes('kali') ? 30 : playerPrice;
+    const extraCost    = myExtraSpots.length * extraRate;
+    const extraPaidAmt = myExtraSpots.filter(s=>s.paid).length * extraRate;
     const totalDue  = (playerInBloc1?playerPrice:0)+(playerInBloc2?playerPrice:0)+extraCost;
     const totalPaid = (currentUser.bloc1Paid?playerPrice:0)+(currentUser.bloc2Paid?playerPrice:0)+extraPaidAmt;
     const balance   = totalDue-totalPaid;
@@ -1048,9 +1049,13 @@ function buildPaymentsUI(players, extraPaid={}){
 
   const priceOf  = p => (p.customPrice !== undefined ? p.customPrice : (p.price||(p.group==='advanced'?250:78)));
   const EXTRA_PRICE = 30;
-  const extra    = p => extraPaid[p.name]||0;
+  const extraRate = p => (p.name||'').toLowerCase().includes('kali') ? 30 : priceOf(p);
+  const extra    = p => {
+    const paid = Object.values(_globalPaySpots).filter(s=>s.reservedBy===p.name&&s.paid);
+    return paid.length * extraRate(p);
+  };
   // extraDue = cost of all reserved extra spots (paid or not)
-  const extraDue = p => (Object.values(_globalPaySpots).filter(s=>s.reservedBy===p.name).length) * 30;
+  const extraDue = p => (Object.values(_globalPaySpots).filter(s=>s.reservedBy===p.name).length) * extraRate(p);
   const due      = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0)+extraDue(p);
   const paid     = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0)+extra(p);
   const bal      = p => due(p)-paid(p);
