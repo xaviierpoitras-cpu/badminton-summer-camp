@@ -554,8 +554,8 @@ function renderGrid(){
     const playerPrice = currentUser.price||(currentUser.group==='advanced'?250:78);
     // Count extra spots reserved by this player
     const myExtraSpots = Object.values(spots).filter(s=>s.reservedBy===currentUser.name);
-    const extraCost = myExtraSpots.length * 30;
-    const extraPaidAmt = myExtraSpots.filter(s=>s.paid).length * 30;
+    const extraCost    = myExtraSpots.length * 30;           // all reserved extras
+    const extraPaidAmt = myExtraSpots.filter(s=>s.paid).length * 30; // paid extras
     const totalDue  = (playerInBloc1?playerPrice:0)+(playerInBloc2?playerPrice:0)+extraCost;
     const totalPaid = (currentUser.bloc1Paid?playerPrice:0)+(currentUser.bloc2Paid?playerPrice:0)+extraPaidAmt;
     const balance   = totalDue-totalPaid;
@@ -1049,17 +1049,19 @@ function buildPaymentsUI(players, extraPaid={}){
   const priceOf  = p => (p.customPrice !== undefined ? p.customPrice : (p.price||(p.group==='advanced'?250:78)));
   const EXTRA_PRICE = 30;
   const extra    = p => extraPaid[p.name]||0;
-  const due      = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0);
+  // extraDue = cost of all reserved extra spots (paid or not)
+  const extraDue = p => (Object.values(_paySpots).filter(s=>s.reservedBy===p.name).length) * 30;
+  const due      = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0)+extraDue(p);
   const paid     = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0)+extra(p);
   const bal      = p => due(p)-paid(p);
 
   const allDue    = players.reduce((s,p)=>s+due(p),0);
   const allPaid   = players.reduce((s,p)=>s+paid(p),0);
 
-  const paidFull  = players.filter(p=>bal(p)===0&&due(p)>0).length;
+  const paidFull  = players.filter(p=>bal(p)<=0&&due(p)>0).length;
 
   const unpaid  = players.filter(p=>bal(p)>0);
-  const fullPaid = players.filter(p=>bal(p)===0&&due(p)>0);
+  const fullPaid = players.filter(p=>bal(p)<=0&&due(p)>0);
 
   let html = `
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
