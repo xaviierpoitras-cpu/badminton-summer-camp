@@ -464,17 +464,24 @@ function renderGrid(){
   const thColors = {adv1:'var(--adv1)',adv2:'var(--adv2)',int1:'var(--int1)',int2:'var(--int2)'};
 
   // Determine enrolled blocs based on player data
-  // ALWAYS use BLOC_DATA as source of truth for bloc enrollment
-  // (Firebase may have stale/incorrect inBloc1/inBloc2 from bad syncs)
-  const strip = s => (s||'').toLowerCase()
-    .replace(/[éèêë]/g,'e').replace(/[àâä]/g,'a')
-    .replace(/[îï]/g,'i').replace(/[ôö]/g,'o')
-    .replace(/[ùûü]/g,'u').replace(/[^a-z ]/g,'').trim();
-  const pName = strip(currentUser.name);
-  const blocMatch = BLOC_DATA.find(p => strip(p.name) === pName);
-  const playerInBloc1 = blocMatch ? blocMatch.inBloc1 !== false : true;
-  const playerInBloc2 = blocMatch ? !!blocMatch.inBloc2 : true;
-  console.log('Player:', currentUser.name, '| B1:', playerInBloc1, '| B2:', playerInBloc2, '| matched:', blocMatch ? blocMatch.name : 'NOT FOUND');
+  // Use Firebase as source of truth (reflects admin changes)
+  // Fall back to BLOC_DATA only if Firebase has NO bloc fields at all
+  let playerInBloc1, playerInBloc2;
+  if(currentUser.inBloc1 !== undefined || currentUser.inBloc2 !== undefined){
+    // Firebase has explicit values — use them
+    playerInBloc1 = currentUser.inBloc1 !== false;
+    playerInBloc2 = !!currentUser.inBloc2;
+  } else {
+    // Firebase has no bloc data — use BLOC_DATA as fallback
+    const strip = s => (s||'').toLowerCase()
+      .replace(/[éèêë]/g,'e').replace(/[àâä]/g,'a')
+      .replace(/[îï]/g,'i').replace(/[ôö]/g,'o')
+      .replace(/[ùûü]/g,'u').replace(/[^a-z ]/g,'').trim();
+    const blocMatch = BLOC_DATA.find(p => strip(p.name) === strip(currentUser.name));
+    playerInBloc1 = blocMatch ? blocMatch.inBloc1 !== false : true;
+    playerInBloc2 = blocMatch ? !!blocMatch.inBloc2 : true;
+  }
+  console.log('Player:', currentUser.name, '| B1:', playerInBloc1, '| B2:', playerInBloc2, '| source:', currentUser.inBloc1!==undefined?'Firebase':'BLOC_DATA');
 
   function isEnrolledSession(grp){
     if(grp==='adv1'||grp==='int1') return playerInBloc1;
