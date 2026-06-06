@@ -1067,10 +1067,11 @@ function buildPaymentsUI(players, extraPaid={}){
   const allDue    = players.reduce((s,p)=>s+due(p),0);
   const allPaid   = players.reduce((s,p)=>s+paid(p),0);
 
-  const paidFull  = players.filter(p=>bal(p)<=0&&due(p)>0).length;
+  const paidFull  = players.filter(p=>blocBal(p)<=0&&(p.inBloc1||p.inBloc2)).length;
 
-  const unpaid  = players.filter(p=>bal(p)>0);
-  const fullPaid = players.filter(p=>bal(p)<=0&&due(p)>0);
+  const blocBal  = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0) - (p.bloc1Paid?priceOf(p):0) - (p.bloc2Paid?priceOf(p):0);
+  const unpaid   = players.filter(p=>blocBal(p)>0);
+  const fullPaid = players.filter(p=>blocBal(p)<=0&&((p.inBloc1||p.inBloc2)||due(p)>0));
 
   let html = `
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px">
