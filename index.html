@@ -999,6 +999,7 @@ function renderMyReservations(){
 let payFilter = 'all';
 
 let paymentsUnsubscribe = null;
+let _globalPaySpots = {};
 
 function renderPayments(){
   const el = document.getElementById('main-area');
@@ -1010,13 +1011,12 @@ function renderPayments(){
 
   // Cache for cross-listener data
   let _payPlayers = [];
-  let _paySpots = {};
 
   function _rebuildPayments(){
     if(!_payPlayers.length) return;
     // Build extraPaid map from paid spots
     const extraPaid = {};
-    Object.values(_paySpots).forEach(s => {
+    Object.values(_globalPaySpots).forEach(s => {
       if(!s.reservedBy || !s.paid) return;
       extraPaid[s.reservedBy] = (extraPaid[s.reservedBy]||0) + 30;
     });
@@ -1033,8 +1033,8 @@ function renderPayments(){
 
   // Also listen to spots for extra payment updates
   const spotsUnsub = db.collection('spots').onSnapshot(snap => {
-    _paySpots = {};
-    snap.forEach(doc => { _paySpots[doc.id] = doc.data(); });
+    _globalPaySpots = {};
+    snap.forEach(doc => { _globalPaySpots[doc.id] = doc.data(); });
     _rebuildPayments();
   });
   // Store for cleanup
@@ -1050,7 +1050,7 @@ function buildPaymentsUI(players, extraPaid={}){
   const EXTRA_PRICE = 30;
   const extra    = p => extraPaid[p.name]||0;
   // extraDue = cost of all reserved extra spots (paid or not)
-  const extraDue = p => (Object.values(_paySpots).filter(s=>s.reservedBy===p.name).length) * 30;
+  const extraDue = p => (Object.values(_globalPaySpots).filter(s=>s.reservedBy===p.name).length) * 30;
   const due      = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0)+extraDue(p);
   const paid     = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0)+extra(p);
   const bal      = p => due(p)-paid(p);
