@@ -312,6 +312,35 @@ async function sha256(msg){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
+// Enrolled player counts per group (for auto-spots)
+let enrolledCounts = {adv1:0, adv2:0, int1:0, int2:0};
+const MAX_CAPACITY = 12;
+
+function loadEnrolledCounts(){
+  db.collection('players').get().then(snap=>{
+    const counts = {adv1:0, adv2:0, int1:0, int2:0};
+    snap.forEach(doc=>{
+      const p = doc.data();
+      const sub = p.subgroup||'';
+      if(sub==='Avancé 1'      && p.inBloc1!==false) counts.adv1++;
+      if(sub==='Avancé 2'      && p.inBloc2===true)  counts.adv2++;
+      if(sub==='Intermédiaire 1' && p.inBloc1!==false) counts.int1++;
+      if(sub==='Intermédiaire 2' && p.inBloc2===true)  counts.int2++;
+    });
+    enrolledCounts = counts;
+    if(currentUser) renderAll();
+  });
+}
+
+// Auto-available spots for a group on a given date
+function autoAvail(dateId, grp){
+  const capacity = Math.max(0, MAX_CAPACITY - enrolledCounts[grp]);
+  const reserved = Object.values(spots).filter(s=>s.dateId===dateId&&s.group===grp&&s.reservedBy).length;
+  const manual   = Object.values(spots).filter(s=>s.dateId===dateId&&s.group===grp&&!s.reservedBy).length;
+  // Auto spots = remaining capacity minus already-reserved spots minus manual available spots
+  return Math.max(0, capacity - reserved - manual);
+}
+
 // Real-time spots listener
 function startSpotsListener(){
   db.collection('spots').onSnapshot(snap=>{
@@ -319,6 +348,7 @@ function startSpotsListener(){
     snap.forEach(doc=>{spots[doc.id]=doc.data();});
     if(currentUser) renderAll();
   });
+  loadEnrolledCounts();
 }
 
 // ── LOGIN ──────────────────────────────────────
@@ -493,10 +523,12 @@ function renderGrid(){
     return Object.entries(spots).find(([k,s])=>s.dateId===dateId&&s.group===grp&&s.reservedBy===currentUser.name);
   }
   function hasAvail(dateId, grp){
-    return Object.values(spots).some(s=>s.dateId===dateId&&s.group===grp&&!s.reservedBy);
+    const manualAvail = Object.values(spots).some(s=>s.dateId===dateId&&s.group===grp&&!s.reservedBy);
+    return manualAvail || autoAvail(dateId, grp) > 0;
   }
   function hasAny(dateId, grp){
-    return Object.values(spots).some(s=>s.dateId===dateId&&s.group===grp);
+    const capacity = Math.max(0, MAX_CAPACITY - enrolledCounts[grp]);
+    return Object.values(spots).some(s=>s.dateId===dateId&&s.group===grp) || capacity > 0;
   }
 
   let html = '';
@@ -669,6 +701,11 @@ function renderAdmin(){
   const allSpots = Object.entries(spots);
   const reserved = allSpots.filter(([,s])=>s.reservedBy);
   const available = allSpots.filter(([,s])=>!s.reservedBy);
+  const totalAuto = Object.entries(enrolledCounts).reduce((sum,[grp,count])=>{
+    const g = GROUPS[grp];
+    const cap = Math.max(0, MAX_CAPACITY - count);
+    return sum + cap;
+  }, 0);
 
   let spotRows = allSpots.length ? allSpots.map(([key,s])=>{
     const g=GROUPS[s.group];
@@ -1285,9 +1322,27 @@ async function removeSpot(key){
 function showCellModal(dId,grp,dateLabel){
   const entries=getSpotsFor(dId,grp);
   const g=GROUPS[grp];
+  const modal=document.getElementById('modal-spot');
+  modal.dataset.grp=grp;
+  modal.dataset.dateId=dId;
+  modal.dataset.dateLabel=dateLabel;
   document.getElementById('spot-title').textContent=g.label;
   document.getElementById('spot-sub').textContent=dateLabel;
   let body='';
+  // Show auto-available spots
+  const numAuto = autoAvail(dId, grp);
+  for(let i=0;i<numAuto;i++){
+    body+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:var(--surface2);border-radius:var(--radius);margin-bottom:6px;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="spot-dot avail" style="width:10px;height:10px;flex-shrink:0"></div>
+        <div>
+          <div style="font-size:13px;font-weight:500">Available</div>
+          <div style="font-size:11px;color:var(--text3)">$${g.price}</div>
+        </div>
+      </div>
+      ${!currentUser.isAdmin?`<button class="btn-primary" style="padding:5px 12px;font-size:12px;flex:none" onclick="reserveSpot('__auto__')">Reserve</button>`:''}
+    </div>`;
+  }
   entries.forEach(([key,s])=>{
     const isRes=!!s.reservedBy;
     const mine=!currentUser.isAdmin&&isRes&&s.reservedBy===currentUser.name;
@@ -1324,15 +1379,29 @@ function showSpotModal(key){
 }
 
 async function reserveSpot(key){
+  if(key === '__auto__'){
+    // Auto spot: create a real spot document in Firebase, then reserve it
+    const grp  = document.getElementById('modal-spot').dataset.grp;
+    const dId  = document.getElementById('modal-spot').dataset.dateId;
+    const dLbl = document.getElementById('modal-spot').dataset.dateLabel;
+    if(!canReserve({group:grp})){
+      alert('You can only reserve spots in your own group.');
+      return;
+    }
+    const docRef = await db.collection('spots').add({
+      group:grp, dateId:dId, dateLabel:dLbl,
+      reservedBy:currentUser.name, createdAt:Date.now()
+    });
+    closeModal('modal-spot');
+    return;
+  }
   if(!spots[key]||spots[key].reservedBy)return;
   const spot = spots[key];
-  // Check group permission
   if(!canReserve(spot)){
     alert('You can only reserve spots in your own group.');
     return;
   }
   await db.collection('spots').doc(key).update({reservedBy:currentUser.name});
-  // If used cross-group permission, revoke it
   if(currentUser.crossGroupPermission && spotLevel(spot.group) !== currentUser.group){
     await db.collection('players').doc(currentUser.docId).update({crossGroupPermission:false});
     currentUser.crossGroupPermission = false;
