@@ -773,7 +773,7 @@ function renderAdminWeekGrid(){
       <table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:12px">
         <thead><tr>
           <th style="padding:7px 10px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;color:var(--text2);min-width:90px">Date</th>
-          ${Object.entries(GROUPS).map(([g,info])=>`<th style="padding:7px 10px;text-align:center;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;color:${thColors[g]}">${info.label}</th>`).join('')}
+          ${Object.entries(GROUPS).map(([g,info])=>`<th style="padding:7px 10px;text-align:center;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;color:${thColors[g]}">${info.label}<br><span style="font-size:10px;font-weight:400;color:var(--text3)">${enrolledCounts[g]}/${MAX_CAPACITY} enrolled</span></th>`).join('')}
         </tr></thead>
         <tbody>`;
     days.forEach(day=>{
@@ -781,15 +781,19 @@ function renderAdminWeekGrid(){
       Object.keys(GROUPS).forEach(grp=>{
         if(!day.groups.includes(grp)){html+=`<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--border)">—</td>`;return;}
         const entries=getSpotsFor(day.id,grp);
-        if(!entries.length){html+=`<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--text3)">–</td>`;return;}
-        let cellContent=entries.map(([key,s])=>{
-          const isRes=!!s.reservedBy;const isPaid=!!s.paid;
-          return `<div style="margin:2px 0;padding:3px 6px;border-radius:6px;background:${isRes?(isPaid?'#DCFCE7':'#FFF7ED'):'#EFF6FF'};border:1px solid ${isRes?(isPaid?'#86EFAC':'#FED7AA'):'#BFDBFE'}">
-            <div style="font-weight:600;color:${isRes?(isPaid?'#166534':'#C2410C'):'#1E40AF'};font-size:11px">${isRes?s.reservedBy:'Available'}</div>
-            ${isRes?`<div style="font-size:10px;color:var(--text3)">${isPaid?'✅ paid':'⏳ unpaid'} · ID:${key.slice(-4)}</div>`:''}
-          </div>`;
-        }).join('');
-        html+=`<td style="padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top">${cellContent}</td>`;
+        const aCount=autoAvail(day.id,grp);
+        if(!entries.length && aCount===0){html+=`<td style="padding:7px 10px;border-bottom:1px solid var(--border);text-align:center;color:var(--text3)">–</td>`;}
+        else{
+          let cc=entries.map(([key,s])=>{
+            const isRes=!!s.reservedBy;const isPaid=!!s.paid;
+            return `<div style="margin:2px 0;padding:2px 6px;border-radius:5px;background:${isRes?(isPaid?'#DCFCE7':'#FFF7ED'):'#EFF6FF'};border:1px solid ${isRes?(isPaid?'#86EFAC':'#FED7AA'):'#BFDBFE'}">
+              <div style="font-weight:600;color:${isRes?(isPaid?'#166534':'#C2410C'):'#1E40AF'};font-size:11px">${isRes?s.reservedBy:'Manual spot'}</div>
+              ${isRes?`<div style="font-size:10px;color:var(--text3)">${isPaid?'✅ paid':'⏳ unpaid'}</div>`:''}
+            </div>`;
+          }).join('');
+          if(aCount>0) cc+=`<div style="margin:2px 0;padding:2px 6px;border-radius:5px;background:#F0FDF4;border:1px solid #86EFAC"><div style="font-weight:600;color:#166534;font-size:11px">🟢 ${aCount} open</div></div>`;
+          html+=`<td style="padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:top">${cc}</td>`;
+        }
       });
       html+=`</tr>`;
     });
