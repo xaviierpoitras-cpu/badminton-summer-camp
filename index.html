@@ -554,7 +554,8 @@ function renderGrid(){
     const playerPrice = currentUser.price||(currentUser.group==='advanced'?250:78);
     // Count extra spots reserved by this player
     const myExtraSpots = Object.values(spots).filter(s=>s.reservedBy===currentUser.name);
-    const extraRate    = (currentUser.name||'').toLowerCase().includes('kali') ? 30 : playerPrice;
+    const sessionRate  = currentUser.group==='advanced' ? parseFloat(PRICE_ADV) : parseFloat(PRICE_INT);
+    const extraRate    = (currentUser.name||'').toLowerCase().includes('kali') ? 30 : sessionRate;
     const extraCost    = myExtraSpots.length * extraRate;
     const extraPaidAmt = myExtraSpots.filter(s=>s.paid).length * extraRate;
     const totalDue  = (playerInBloc1?playerPrice:0)+(playerInBloc2?playerPrice:0)+extraCost;
@@ -1019,7 +1020,10 @@ function renderPayments(){
     const extraPaid = {};
     Object.values(_globalPaySpots).forEach(s => {
       if(!s.reservedBy || !s.paid) return;
-      extraPaid[s.reservedBy] = (extraPaid[s.reservedBy]||0) + 30;
+      const player = _payPlayers.find(p=>p.name===s.reservedBy);
+      const rate = player && (player.name||'').toLowerCase().includes('kali') ? 30
+        : player ? (player.group==='advanced' ? parseFloat(PRICE_ADV) : parseFloat(PRICE_INT)) : 30;
+      extraPaid[s.reservedBy] = (extraPaid[s.reservedBy]||0) + rate;
     });
     buildPaymentsUI(_payPlayers, extraPaid);
   }
@@ -1049,7 +1053,8 @@ function buildPaymentsUI(players, extraPaid={}){
 
   const priceOf  = p => (p.customPrice !== undefined ? p.customPrice : (p.price||(p.group==='advanced'?250:78)));
   const EXTRA_PRICE = 30;
-  const extraRate = p => (p.name||'').toLowerCase().includes('kali') ? 30 : priceOf(p);
+  const sessionPrice = p => p.group==='advanced' ? parseFloat(PRICE_ADV) : parseFloat(PRICE_INT);
+  const extraRate = p => (p.name||'').toLowerCase().includes('kali') ? 30 : sessionPrice(p);
   const extra    = p => {
     const paid = Object.values(_globalPaySpots).filter(s=>s.reservedBy===p.name&&s.paid);
     return paid.length * extraRate(p);
