@@ -1005,10 +1005,9 @@ let _globalPaySpots = {};
 function renderPayments(){
   const el = document.getElementById('main-area');
   if(!el){ setTimeout(renderPayments, 200); return; }
-  el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading payments...</p>';
-
-  // Don't restart if already running — prevents player disappearing on spot updates
+  // Don't restart listeners if already running — prevents loading flicker
   if(paymentsUnsubscribe) return;
+  el.innerHTML = '<p style="color:var(--text3);padding:2rem;text-align:center">Loading payments...</p>';
 
   // Cache for cross-listener data
   let _payPlayers = [];
