@@ -328,12 +328,37 @@ function computeEnrolledCounts(){
 }
 let enrolledCounts = computeEnrolledCounts();
 
+// Per-week enrollment counts for auto-spot capacity
+let weekCounts = {adv1:[0,0,0,0,0,0], adv2:[0,0,0,0,0,0], int1:[0,0,0,0,0,0], int2:[0,0,0,0,0,0]};
+function computeWeekCounts(players){
+  const groups = ['adv1','adv2','int1','int2'];
+  const result = {};
+  groups.forEach(g=>result[g]=[0,0,0,0,0,0]);
+  const submap = {'Avancé 1':'adv1','Avancé 2':'adv2','Intermédiaire 1':'int1','Intermédiaire 2':'int2'};
+  players.forEach(p=>{
+    const g = submap[p.subgroup||''];
+    if(!g) return;
+    for(let w=1; w<=6; w++){
+      const wf = p['week'+w];
+      const blocVal = w<=3 ? p.inBloc1!==false : p.inBloc2===true;
+      const isEnrolled = wf === undefined ? blocVal : !!wf;
+      if(isEnrolled) result[g][w-1]++;
+    }
+  });
+  return result;
+}
+
 // Auto-available spots for a group on a given date
 function autoAvail(dateId, grp){
-  const capacity = Math.max(0, MAX_CAPACITY - enrolledCounts[grp]);
+  let week = 0;
+  SCHEDULE.forEach(({week:w, days})=>{if(days.some(d=>d.id===dateId)) week=w;});
+  let count = enrolledCounts[grp];
+  if(week > 0 && weekCounts[grp] && weekCounts[grp][week-1] !== undefined){
+    count = weekCounts[grp][week-1];
+  }
+  const capacity = Math.max(0, MAX_CAPACITY - count);
   const reserved = Object.values(spots).filter(s=>s.dateId===dateId&&s.group===grp&&s.reservedBy).length;
   const manual   = Object.values(spots).filter(s=>s.dateId===dateId&&s.group===grp&&!s.reservedBy).length;
-  // Auto spots = remaining capacity minus already-reserved spots minus manual available spots
   return Math.max(0, capacity - reserved - manual);
 }
 
@@ -554,7 +579,14 @@ function renderGrid(){
     const extraRate    = (currentUser.name||'').toLowerCase().includes('kali') ? 30 : sessionRate;
     const extraCost    = myExtraSpots.length * extraRate;
     const extraPaidAmt = myExtraSpots.filter(s=>s.paid).length * extraRate;
-    const totalDue  = (playerInBloc1?playerPrice:0)+(playerInBloc2?playerPrice:0)+extraCost;
+    let weekCount = 0;
+    for(let w=1; w<=6; w++){
+      const wf = currentUser['week'+w];
+      const blocVal = w<=3 ? playerInBloc1 : playerInBloc2;
+      if(wf === undefined ? blocVal : !!wf) weekCount++;
+    }
+    const weekPrice = playerPrice / 3;
+    const totalDue  = (weekCount * weekPrice) + extraCost;
     const totalPaid = (currentUser.bloc1Paid?playerPrice:0)+(currentUser.bloc2Paid?playerPrice:0)+extraPaidAmt;
     const balance   = totalDue-totalPaid;
 
@@ -616,6 +648,11 @@ function renderGrid(){
 
   blocs.forEach(({label, weeks, groups}, blocIdx)=>{
     const blocEnrolled = !isAdmin && (blocIdx===0 ? playerInBloc1 : playerInBloc2);
+    const blocWeeks = blocIdx===0 ? [1,2,3] : [4,5,6];
+    const enrolledWeeks = blocWeeks.filter(w => {
+      const wf = currentUser['week'+w];
+      return wf === undefined ? blocEnrolled : !!wf;
+    });
     // Collect all days for this bloc
     const blocDays = [];
     SCHEDULE.filter(s=>weeks.includes(s.week)).forEach(({week,days})=>{
@@ -654,7 +691,10 @@ function renderGrid(){
         const avail = hasAvail(day.id, grp);
         const any   = hasAny(day.id, grp);
 
-        if(blocEnrolled){
+        let dayWeek = 0;
+        SCHEDULE.forEach(({week:w,days})=>{if(days.some(d=>d.id===day.id)) dayWeek=w;});
+        const weekEnrolled = !isAdmin && enrolledWeeks.includes(dayWeek);
+        if(weekEnrolled){
           html+=`<td><div class="spot-wrap" onclick="showEnrolledInfo('${day.label}','${grp}')">
             <div class="spot-circle spot-yours" style="cursor:pointer">🏸</div>
           </div></td>`;
@@ -1015,6 +1055,7 @@ function renderPayments(){
 
   function _rebuildPayments(){
     if(!_payPlayers.length) return;
+    weekCounts = computeWeekCounts(_payPlayers);
     // Build extraPaid map from paid spots
     const extraPaid = {};
     Object.values(_globalPaySpots).forEach(s => {
@@ -1051,6 +1092,16 @@ function buildPaymentsUI(players, extraPaid={}){
   window._paymentPlayers = players;
 
   const priceOf  = p => (p.customPrice !== undefined ? p.customPrice : (p.price||(p.group==='advanced'?250:78)));
+  const pricePerWeek = p => priceOf(p) / 3;
+  const weeksIn = p => {
+    let c = 0;
+    for(let w=1; w<=6; w++){
+      const wf = p['week'+w];
+      const blocVal = w<=3 ? p.inBloc1!==false : p.inBloc2===true;
+      if(wf === undefined ? blocVal : !!wf) c++;
+    }
+    return c;
+  };
   const EXTRA_PRICE = 30;
   const sessionPrice = p => p.group==='advanced' ? parseFloat(PRICE_ADV) : parseFloat(PRICE_INT);
   const extraRate = p => (p.name||'').toLowerCase().includes('kali') ? 30 : sessionPrice(p);
@@ -1060,14 +1111,14 @@ function buildPaymentsUI(players, extraPaid={}){
   };
   // extraDue = cost of all reserved extra spots (paid or not)
   const extraDue = p => (Object.values(_globalPaySpots).filter(s=>s.reservedBy===p.name).length) * extraRate(p);
-  const due      = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0)+extraDue(p);
+  const due      = p => (weeksIn(p) * pricePerWeek(p)) + extraDue(p);
   const paid     = p => (p.bloc1Paid?priceOf(p):0)+(p.bloc2Paid?priceOf(p):0)+extra(p);
   const bal      = p => due(p)-paid(p);
 
   const allDue    = players.reduce((s,p)=>s+due(p),0);
   const allPaid   = players.reduce((s,p)=>s+paid(p),0);
 
-  const blocBal  = p => (p.inBloc1?priceOf(p):0)+(p.inBloc2?priceOf(p):0) - (p.bloc1Paid?priceOf(p):0) - (p.bloc2Paid?priceOf(p):0);
+  const blocBal  = p => (weeksIn(p) * pricePerWeek(p)) - (p.bloc1Paid?priceOf(p):0) - (p.bloc2Paid?priceOf(p):0);
   const unpaid   = players.filter(p=>blocBal(p)>0);
   const fullPaid = players.filter(p=>blocBal(p)<=0&&((p.inBloc1||p.inBloc2)||due(p)>0));
   const paidFull = fullPaid.length;
@@ -1253,6 +1304,7 @@ function renderRoster(){
   window._rosterUnsub = db.collection('players').onSnapshot(snap => {
     const players = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
     window._paymentPlayers = players;
+    weekCounts = computeWeekCounts(players);
     buildRosterUI(players);
   });
 }
@@ -1287,36 +1339,44 @@ function buildRosterUI(players){
   Object.entries(groups).forEach(([groupName, gPlayers]) => {
     if(!gPlayers.length) return;
     const colors = GROUP_COLORS[groupName];
-    const b1count = gPlayers.filter(p=>p.inBloc1!==false).length;
-    const b2count = gPlayers.filter(p=>p.inBloc2===true).length;
+
+    // Compute per-week counts
+    const wCounts = [0,0,0,0,0,0];
+    gPlayers.forEach(p=>{
+      for(let w=1;w<=6;w++){
+        const wf = p['week'+w];
+        const blocVal = w<=3 ? p.inBloc1!==false : p.inBloc2===true;
+        if(wf === undefined ? blocVal : !!wf) wCounts[w-1]++;
+      }
+    });
 
     html += `<div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:var(--shadow);overflow:hidden;margin-bottom:1.25rem;border:0.5px solid var(--border-light)">
-      <!-- Group header -->
-      <div style="background:${colors.dark};padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
+      <div style="background:${colors.dark};padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <span style="font-size:15px;font-weight:600;color:#fff;letter-spacing:-.02em">${groupName}</span>
-        <div style="display:flex;gap:16px">
-          <span style="font-size:12px;color:rgba(255,255,255,.7)">Bloc 1: <strong style="color:#fff">${b1count}</strong></span>
-          <span style="font-size:12px;color:rgba(255,255,255,.7)">Bloc 2: <strong style="color:#fff">${b2count}</strong></span>
+        <div style="display:flex;gap:14px;flex-wrap:wrap">
+          ${wCounts.map((c,i)=>`<span style="font-size:11px;color:rgba(255,255,255,.7)">W${i+1}: <strong style="color:#fff">${c}</strong></span>`).join('')}
         </div>
       </div>
-      <!-- Column headers -->
-      <div style="display:grid;grid-template-columns:1fr 80px 80px;padding:8px 24px;background:var(--surface2);border-bottom:0.5px solid var(--border-light)">
-        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)">Name</span>
-        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);text-align:center">Bloc 1</span>
-        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);text-align:center">Bloc 2</span>
+      <div style="display:grid;grid-template-columns:1.8fr repeat(6,1fr);padding:8px 16px;background:var(--surface2);border-bottom:0.5px solid var(--border-light);gap:4px">
+        <span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)">Name</span>
+        ${[1,2,3,4,5,6].map(w=>`<span style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);text-align:center">W${w}</span>`).join('')}
       </div>`;
 
     gPlayers.forEach((p, i) => {
-      const inB1 = p.inBloc1 !== false;
-      const inB2 = p.inBloc2 === true;
       const rowBg = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
-      html += `<div style="display:grid;grid-template-columns:1fr 80px 80px;padding:11px 24px;border-bottom:0.5px solid var(--border-light);background:${rowBg};align-items:center">
-        <div>
-          <button onclick="openEditPlayer('${p.id}')" style="font-size:14px;font-weight:500;color:${colors.dark};background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-align:left">${p.name}</button>
-          ${p.pin?`<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-left:8px">${p.pin}</span>`:''}
+      html += `<div style="display:grid;grid-template-columns:1.8fr repeat(6,1fr);padding:9px 16px;border-bottom:0.5px solid var(--border-light);background:${rowBg};align-items:center;gap:4px">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <button onclick="openEditPlayer('${p.id}')" style="font-size:13px;font-weight:500;color:${colors.dark};background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-align:left">${p.name}</button>
+          ${p.pin?`<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-left:6px">${p.pin}</span>`:''}
         </div>
-        <div style="text-align:center;font-size:16px">${inB1?'✓':''}</div>
-        <div style="text-align:center;font-size:16px">${inB2?'✓':''}</div>
+        ${[1,2,3,4,5,6].map(w=>{
+          const hasBloc = w<=3 ? (p.inBloc1!==false) : (p.inBloc2===true);
+          if(!hasBloc) return `<div style="text-align:center;color:var(--text3);font-size:13px">—</div>`;
+          const wf = p['week'+w];
+          const blocVal = w<=3 ? p.inBloc1!==false : p.inBloc2===true;
+          const isOn = wf === undefined ? blocVal : !!wf;
+          return `<div style="text-align:center"><input type="checkbox" ${isOn?'checked':''} onchange="toggleWeek('${p.id}',${w},this.checked)" style="cursor:pointer;width:18px;height:18px;accent-color:${colors.dark}"/></div>`;
+        }).join('')}
       </div>`;
     });
 
@@ -1572,6 +1632,12 @@ async function togglePaid(key){
   if(!spots[key]) return;
   const newVal = !spots[key].paid;
   await db.collection('spots').doc(key).update({paid: newVal});
+}
+
+async function toggleWeek(playerId, week, checked){
+  const update = {};
+  update['week'+week] = checked;
+  await db.collection('players').doc(playerId).update(update);
 }
 
 let editPlayerId = null;
